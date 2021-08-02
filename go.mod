@@ -3,7 +3,6 @@ module kubeform.dev/provider-newrelic-controller
 go 1.16
 
 require (
-	github.com/equinix/terraform-provider-metal v1.1.1-0.20210727130052-a55db9bd1897
 	github.com/fatih/structs v1.1.0
 	github.com/go-logr/logr v0.4.0
 	github.com/gobuffalo/flect v0.2.3
@@ -12,6 +11,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
 	github.com/imdario/mergo v0.3.12
 	github.com/json-iterator/go v1.1.11
+	github.com/newrelic/terraform-provider-newrelic/v2 v2.24.1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.3
 	go.bytebuilders.dev/audit v0.0.7
@@ -26,7 +26,7 @@ require (
 	k8s.io/klog/v2 v2.8.0
 	kmodules.xyz/client-go v0.0.0-20210617233340-13d22e91512b
 	kubeform.dev/apimachinery v0.0.0-20210629153539-7bcd34a30eb5
-	kubeform.dev/provider-newrelic-api v0.2.0
+	kubeform.dev/provider-newrelic-api v0.0.0-20210802153136-3ae5a04bafd1
 	sigs.k8s.io/cli-utils v0.25.0
 	sigs.k8s.io/controller-runtime v0.9.0
 )
