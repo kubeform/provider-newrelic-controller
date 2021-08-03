@@ -3,7 +3,7 @@
 
 # provider-newrelic-controller
 
-Kubeform controller for [Terraform Newrelic Provider](https://github.com/equinix/terraform-provider-metal)
+Kubeform controller for [Terraform Newrelic Provider](https://github.com/newrelic/terraform-provider-newrelic)
 
 ## Installation
 
