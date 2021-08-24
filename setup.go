@@ -76,7 +76,7 @@ var runningControllers = struct {
 	mp map[schema.GroupVersionKind]bool
 }{mp: make(map[schema.GroupVersionKind]bool)}
 
-func watchCRD(ctx context.Context, crdClient *clientset.Clientset, vwcClient *admissionregistrationv1.AdmissionregistrationV1Client, stopCh <-chan struct{}, mgr manager.Manager, auditor *auditlib.EventPublisher, watchOnlyDefault bool) error {
+func watchCRD(ctx context.Context, crdClient *clientset.Clientset, vwcClient *admissionregistrationv1.AdmissionregistrationV1Client, stopCh <-chan struct{}, mgr manager.Manager, auditor *auditlib.EventPublisher, restrictToNamespace string) error {
 	informerFactory := informers.NewSharedInformerFactory(crdClient, time.Second*30)
 	i := informerFactory.Apiextensions().V1().CustomResourceDefinitions().Informer()
 	l := informerFactory.Apiextensions().V1().CustomResourceDefinitions().Lister()
@@ -142,7 +142,7 @@ func watchCRD(ctx context.Context, crdClient *clientset.Clientset, vwcClient *ad
 						}
 					}
 
-					err = SetupManager(ctx, mgr, gvk, auditor, watchOnlyDefault)
+					err = SetupManager(ctx, mgr, gvk, auditor, restrictToNamespace)
 					if err != nil {
 						setupLog.Error(err, "unable to start manager")
 						os.Exit(1)
@@ -201,6 +201,7 @@ func updateVWC(vwcClient *admissionregistrationv1.AdmissionregistrationV1Client,
 		{
 			Operations: []arv1.OperationType{
 				arv1.Delete,
+				arv1.Update,
 			},
 			Rule: arv1.Rule{
 				APIGroups:   []string{strings.ToLower(gvk.Group)},
@@ -248,7 +249,7 @@ func updateVWC(vwcClient *admissionregistrationv1.AdmissionregistrationV1Client,
 	return nil
 }
 
-func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVersionKind, auditor *auditlib.EventPublisher, watchOnlyDefault bool) error {
+func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVersionKind, auditor *auditlib.EventPublisher, restrictToNamespace string) error {
 	switch gvk {
 	case schema.GroupVersionKind{
 		Group:   "alert.newrelic.kubeform.com",
@@ -256,15 +257,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Channel",
 	}:
 		if err := (&controllersalert.ChannelReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Channel"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_alert_channel"],
-			TypeName:         "newrelic_alert_channel",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Channel"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_alert_channel"],
+			TypeName: "newrelic_alert_channel",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Channel")
 			return err
 		}
@@ -274,15 +274,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Condition",
 	}:
 		if err := (&controllersalert.ConditionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Condition"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_alert_condition"],
-			TypeName:         "newrelic_alert_condition",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Condition"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_alert_condition"],
+			TypeName: "newrelic_alert_condition",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Condition")
 			return err
 		}
@@ -292,15 +291,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "MutingRule",
 	}:
 		if err := (&controllersalert.MutingRuleReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("MutingRule"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_alert_muting_rule"],
-			TypeName:         "newrelic_alert_muting_rule",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("MutingRule"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_alert_muting_rule"],
+			TypeName: "newrelic_alert_muting_rule",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "MutingRule")
 			return err
 		}
@@ -310,15 +308,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Policy",
 	}:
 		if err := (&controllersalert.PolicyReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Policy"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_alert_policy"],
-			TypeName:         "newrelic_alert_policy",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Policy"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_alert_policy"],
+			TypeName: "newrelic_alert_policy",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Policy")
 			return err
 		}
@@ -328,15 +325,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "PolicyChannel",
 	}:
 		if err := (&controllersalert.PolicyChannelReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("PolicyChannel"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_alert_policy_channel"],
-			TypeName:         "newrelic_alert_policy_channel",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("PolicyChannel"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_alert_policy_channel"],
+			TypeName: "newrelic_alert_policy_channel",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "PolicyChannel")
 			return err
 		}
@@ -346,15 +342,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Key",
 	}:
 		if err := (&controllersapiaccess.KeyReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Key"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_api_access_key"],
-			TypeName:         "newrelic_api_access_key",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Key"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_api_access_key"],
+			TypeName: "newrelic_api_access_key",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Key")
 			return err
 		}
@@ -364,15 +359,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Settings",
 	}:
 		if err := (&controllersapplication.SettingsReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Settings"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_application_settings"],
-			TypeName:         "newrelic_application_settings",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Settings"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_application_settings"],
+			TypeName: "newrelic_application_settings",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Settings")
 			return err
 		}
@@ -382,15 +376,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Dashboard",
 	}:
 		if err := (&controllersdashboard.DashboardReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Dashboard"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_dashboard"],
-			TypeName:         "newrelic_dashboard",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Dashboard"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_dashboard"],
+			TypeName: "newrelic_dashboard",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Dashboard")
 			return err
 		}
@@ -400,15 +393,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Tags",
 	}:
 		if err := (&controllersentity.TagsReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Tags"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_entity_tags"],
-			TypeName:         "newrelic_entity_tags",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Tags"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_entity_tags"],
+			TypeName: "newrelic_entity_tags",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Tags")
 			return err
 		}
@@ -418,15 +410,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "ToMetricsRule",
 	}:
 		if err := (&controllersevents.ToMetricsRuleReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("ToMetricsRule"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_events_to_metrics_rule"],
-			TypeName:         "newrelic_events_to_metrics_rule",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("ToMetricsRule"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_events_to_metrics_rule"],
+			TypeName: "newrelic_events_to_metrics_rule",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "ToMetricsRule")
 			return err
 		}
@@ -436,15 +427,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AlertCondition",
 	}:
 		if err := (&controllersinfra.AlertConditionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AlertCondition"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_infra_alert_condition"],
-			TypeName:         "newrelic_infra_alert_condition",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AlertCondition"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_infra_alert_condition"],
+			TypeName: "newrelic_infra_alert_condition",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AlertCondition")
 			return err
 		}
@@ -454,15 +444,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Event",
 	}:
 		if err := (&controllersinsights.EventReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Event"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_insights_event"],
-			TypeName:         "newrelic_insights_event",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Event"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_insights_event"],
+			TypeName: "newrelic_insights_event",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Event")
 			return err
 		}
@@ -472,15 +461,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AlertCondition",
 	}:
 		if err := (&controllersnrql.AlertConditionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AlertCondition"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_nrql_alert_condition"],
-			TypeName:         "newrelic_nrql_alert_condition",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AlertCondition"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_nrql_alert_condition"],
+			TypeName: "newrelic_nrql_alert_condition",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AlertCondition")
 			return err
 		}
@@ -490,15 +478,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "DropRule",
 	}:
 		if err := (&controllersnrql.DropRuleReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("DropRule"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_nrql_drop_rule"],
-			TypeName:         "newrelic_nrql_drop_rule",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("DropRule"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_nrql_drop_rule"],
+			TypeName: "newrelic_nrql_drop_rule",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "DropRule")
 			return err
 		}
@@ -508,15 +495,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Dashboard",
 	}:
 		if err := (&controllersone.DashboardReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Dashboard"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_one_dashboard"],
-			TypeName:         "newrelic_one_dashboard",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Dashboard"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_one_dashboard"],
+			TypeName: "newrelic_one_dashboard",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Dashboard")
 			return err
 		}
@@ -526,15 +512,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "DashboardRaw",
 	}:
 		if err := (&controllersone.DashboardRawReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("DashboardRaw"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_one_dashboard_raw"],
-			TypeName:         "newrelic_one_dashboard_raw",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("DashboardRaw"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_one_dashboard_raw"],
+			TypeName: "newrelic_one_dashboard_raw",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "DashboardRaw")
 			return err
 		}
@@ -544,15 +529,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AlertCondition",
 	}:
 		if err := (&controllersplugins.AlertConditionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AlertCondition"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_plugins_alert_condition"],
-			TypeName:         "newrelic_plugins_alert_condition",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AlertCondition"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_plugins_alert_condition"],
+			TypeName: "newrelic_plugins_alert_condition",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AlertCondition")
 			return err
 		}
@@ -562,15 +546,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "AlertCondition",
 	}:
 		if err := (&controllerssynthetics.AlertConditionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("AlertCondition"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_synthetics_alert_condition"],
-			TypeName:         "newrelic_synthetics_alert_condition",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("AlertCondition"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_synthetics_alert_condition"],
+			TypeName: "newrelic_synthetics_alert_condition",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "AlertCondition")
 			return err
 		}
@@ -580,15 +563,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Monitor",
 	}:
 		if err := (&controllerssynthetics.MonitorReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Monitor"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_synthetics_monitor"],
-			TypeName:         "newrelic_synthetics_monitor",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Monitor"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_synthetics_monitor"],
+			TypeName: "newrelic_synthetics_monitor",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Monitor")
 			return err
 		}
@@ -598,15 +580,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "MonitorScript",
 	}:
 		if err := (&controllerssynthetics.MonitorScriptReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("MonitorScript"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_synthetics_monitor_script"],
-			TypeName:         "newrelic_synthetics_monitor_script",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("MonitorScript"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_synthetics_monitor_script"],
+			TypeName: "newrelic_synthetics_monitor_script",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "MonitorScript")
 			return err
 		}
@@ -616,15 +597,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "MultilocationAlertCondition",
 	}:
 		if err := (&controllerssynthetics.MultilocationAlertConditionReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("MultilocationAlertCondition"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_synthetics_multilocation_alert_condition"],
-			TypeName:         "newrelic_synthetics_multilocation_alert_condition",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("MultilocationAlertCondition"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_synthetics_multilocation_alert_condition"],
+			TypeName: "newrelic_synthetics_multilocation_alert_condition",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "MultilocationAlertCondition")
 			return err
 		}
@@ -634,15 +614,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "SecureCredential",
 	}:
 		if err := (&controllerssynthetics.SecureCredentialReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("SecureCredential"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_synthetics_secure_credential"],
-			TypeName:         "newrelic_synthetics_secure_credential",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("SecureCredential"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_synthetics_secure_credential"],
+			TypeName: "newrelic_synthetics_secure_credential",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "SecureCredential")
 			return err
 		}
@@ -652,15 +631,14 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 		Kind:    "Workload",
 	}:
 		if err := (&controllersworkload.WorkloadReconciler{
-			Client:           mgr.GetClient(),
-			Log:              ctrl.Log.WithName("controllers").WithName("Workload"),
-			Scheme:           mgr.GetScheme(),
-			Gvk:              gvk,
-			Provider:         _provider,
-			Resource:         _provider.ResourcesMap["newrelic_workload"],
-			TypeName:         "newrelic_workload",
-			WatchOnlyDefault: watchOnlyDefault,
-		}).SetupWithManager(ctx, mgr, auditor); err != nil {
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Workload"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_workload"],
+			TypeName: "newrelic_workload",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
 			setupLog.Error(err, "unable to create controller", "controller", "Workload")
 			return err
 		}
