@@ -1149,7 +1149,7 @@ kmodules.xyz/resource-metadata/pkg/graph
 ## explicit
 kubeform.dev/apimachinery/api/v1alpha1
 kubeform.dev/apimachinery/pkg/util
-# kubeform.dev/provider-newrelic-api v0.3.1-0.20210825085232-d7dae7fa854a
+# kubeform.dev/provider-newrelic-api v0.3.1-0.20210829181805-c19921179011
 ## explicit
 kubeform.dev/provider-newrelic-api/api/provider
 kubeform.dev/provider-newrelic-api/apis/alert
