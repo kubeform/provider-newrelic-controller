@@ -6,8 +6,10 @@ import (
 	"fmt"
 
 	"github.com/newrelic/newrelic-client-go/pkg/accounts"
+	"github.com/newrelic/newrelic-client-go/pkg/common"
 	"github.com/newrelic/newrelic-client-go/pkg/nrdb"
 	"github.com/newrelic/newrelic-client-go/pkg/nrtime"
+	"github.com/newrelic/newrelic-client-go/pkg/servicelevel"
 	"github.com/newrelic/newrelic-client-go/pkg/users"
 )
 
@@ -887,6 +889,52 @@ var EntityInfrastructureIntegrationTypeTypes = struct {
 	VARNISH_INSTANCE: "VARNISH_INSTANCE",
 }
 
+// EntityRelationshipEdgeDirection - Values for relationship direction filter.
+type EntityRelationshipEdgeDirection string
+
+var EntityRelationshipEdgeDirectionTypes = struct {
+	// Traverse both inbound and outbound connections.
+	BOTH EntityRelationshipEdgeDirection
+	// Traverse inbound connections to the source of the relationship.
+	INBOUND EntityRelationshipEdgeDirection
+	// Traverse outbound connections to the target of the relationship.
+	OUTBOUND EntityRelationshipEdgeDirection
+}{
+	// Traverse both inbound and outbound connections.
+	BOTH: "BOTH",
+	// Traverse inbound connections to the source of the relationship.
+	INBOUND: "INBOUND",
+	// Traverse outbound connections to the target of the relationship.
+	OUTBOUND: "OUTBOUND",
+}
+
+// EntityRelationshipEdgeType - The type of the relationship.
+type EntityRelationshipEdgeType string
+
+var EntityRelationshipEdgeTypeTypes = struct {
+	// The source entity calls the target entity.
+	CALLS EntityRelationshipEdgeType
+	// The source entity contains the target entity.
+	CONTAINS EntityRelationshipEdgeType
+	// The source entity hosts the target.
+	HOSTS EntityRelationshipEdgeType
+	// The source and target entities are perspectives on the same thing.
+	IS EntityRelationshipEdgeType
+	// The source is an Application that serves the target Browser application.
+	SERVES EntityRelationshipEdgeType
+}{
+	// The source entity calls the target entity.
+	CALLS: "CALLS",
+	// The source entity contains the target entity.
+	CONTAINS: "CONTAINS",
+	// The source entity hosts the target.
+	HOSTS: "HOSTS",
+	// The source and target entities are perspectives on the same thing.
+	IS: "IS",
+	// The source is an Application that serves the target Browser application.
+	SERVES: "SERVES",
+}
+
 // EntityRelationshipType - The type of the relationship.
 //
 // For details, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
@@ -1430,7 +1478,7 @@ type ApmApplicationEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -1457,6 +1505,8 @@ type ApmApplicationEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
@@ -1465,6 +1515,8 @@ type ApmApplicationEntity struct {
 	Reporting bool `json:"reporting,omitempty"`
 	// The running versions of the language agent in the APM Application.
 	RunningAgentVersions ApmApplicationRunningAgentVersions `json:"runningAgentVersions,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// Configuration settings for the APM Application
 	Settings ApmApplicationSettings `json:"settings,omitempty"`
 	// The tags applied to the entity.
@@ -1533,7 +1585,7 @@ func (x ApmApplicationEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ApmApplicationEntity
-func (x ApmApplicationEntity) GetGUID() EntityGUID {
+func (x ApmApplicationEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -1592,6 +1644,11 @@ func (x ApmApplicationEntity) GetRecentAlertViolations() []EntityAlertViolation 
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from ApmApplicationEntity
+func (x ApmApplicationEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from ApmApplicationEntity
 func (x ApmApplicationEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -1605,6 +1662,11 @@ func (x ApmApplicationEntity) GetReporting() bool {
 // GetRunningAgentVersions returns a pointer to the value of RunningAgentVersions from ApmApplicationEntity
 func (x ApmApplicationEntity) GetRunningAgentVersions() ApmApplicationRunningAgentVersions {
 	return x.RunningAgentVersions
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ApmApplicationEntity
+func (x ApmApplicationEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetSettings returns a pointer to the value of Settings from ApmApplicationEntity
@@ -1652,7 +1714,7 @@ type ApmApplicationEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -1669,6 +1731,8 @@ type ApmApplicationEntityOutline struct {
 	Reporting bool `json:"reporting,omitempty"`
 	// The running versions of the language agent in the APM Application.
 	RunningAgentVersions ApmApplicationRunningAgentVersions `json:"runningAgentVersions,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// Configuration settings for the APM Application
 	Settings ApmApplicationSettings `json:"settings,omitempty"`
 	// The tags applied to the entity.
@@ -1720,7 +1784,7 @@ func (x ApmApplicationEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ApmApplicationEntityOutline
-func (x ApmApplicationEntityOutline) GetGUID() EntityGUID {
+func (x ApmApplicationEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -1762,6 +1826,11 @@ func (x ApmApplicationEntityOutline) GetReporting() bool {
 // GetRunningAgentVersions returns a pointer to the value of RunningAgentVersions from ApmApplicationEntityOutline
 func (x ApmApplicationEntityOutline) GetRunningAgentVersions() ApmApplicationRunningAgentVersions {
 	return x.RunningAgentVersions
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ApmApplicationEntityOutline
+func (x ApmApplicationEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetSettings returns a pointer to the value of Settings from ApmApplicationEntityOutline
@@ -1881,7 +1950,7 @@ type ApmDatabaseInstanceEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -1906,12 +1975,16 @@ type ApmDatabaseInstanceEntity struct {
 	PortOrPath string `json:"portOrPath,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -1955,7 +2028,7 @@ func (x ApmDatabaseInstanceEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ApmDatabaseInstanceEntity
-func (x ApmDatabaseInstanceEntity) GetGUID() EntityGUID {
+func (x ApmDatabaseInstanceEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2009,6 +2082,11 @@ func (x ApmDatabaseInstanceEntity) GetRecentAlertViolations() []EntityAlertViola
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from ApmDatabaseInstanceEntity
+func (x ApmDatabaseInstanceEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from ApmDatabaseInstanceEntity
 func (x ApmDatabaseInstanceEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -2017,6 +2095,11 @@ func (x ApmDatabaseInstanceEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from ApmDatabaseInstanceEntity
 func (x ApmDatabaseInstanceEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ApmDatabaseInstanceEntity
+func (x ApmDatabaseInstanceEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from ApmDatabaseInstanceEntity
@@ -2056,7 +2139,7 @@ type ApmDatabaseInstanceEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -2073,6 +2156,8 @@ type ApmDatabaseInstanceEntityOutline struct {
 	PortOrPath string `json:"portOrPath,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -2109,7 +2194,7 @@ func (x ApmDatabaseInstanceEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ApmDatabaseInstanceEntityOutline
-func (x ApmDatabaseInstanceEntityOutline) GetGUID() EntityGUID {
+func (x ApmDatabaseInstanceEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2153,6 +2238,11 @@ func (x ApmDatabaseInstanceEntityOutline) GetReporting() bool {
 	return x.Reporting
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ApmDatabaseInstanceEntityOutline
+func (x ApmDatabaseInstanceEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from ApmDatabaseInstanceEntityOutline
 func (x ApmDatabaseInstanceEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -2189,7 +2279,7 @@ type ApmExternalServiceEntity struct {
 	//
 	ExternalSummary ApmExternalServiceSummaryData `json:"externalSummary,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -2212,12 +2302,16 @@ type ApmExternalServiceEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -2264,7 +2358,7 @@ func (x ApmExternalServiceEntity) GetExternalSummary() ApmExternalServiceSummary
 }
 
 // GetGUID returns a pointer to the value of GUID from ApmExternalServiceEntity
-func (x ApmExternalServiceEntity) GetGUID() EntityGUID {
+func (x ApmExternalServiceEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2313,6 +2407,11 @@ func (x ApmExternalServiceEntity) GetRecentAlertViolations() []EntityAlertViolat
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from ApmExternalServiceEntity
+func (x ApmExternalServiceEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from ApmExternalServiceEntity
 func (x ApmExternalServiceEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -2321,6 +2420,11 @@ func (x ApmExternalServiceEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from ApmExternalServiceEntity
 func (x ApmExternalServiceEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ApmExternalServiceEntity
+func (x ApmExternalServiceEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from ApmExternalServiceEntity
@@ -2357,7 +2461,7 @@ type ApmExternalServiceEntityOutline struct {
 	//
 	ExternalSummary ApmExternalServiceSummaryData `json:"externalSummary,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -2372,6 +2476,8 @@ type ApmExternalServiceEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -2411,7 +2517,7 @@ func (x ApmExternalServiceEntityOutline) GetExternalSummary() ApmExternalService
 }
 
 // GetGUID returns a pointer to the value of GUID from ApmExternalServiceEntityOutline
-func (x ApmExternalServiceEntityOutline) GetGUID() EntityGUID {
+func (x ApmExternalServiceEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2448,6 +2554,11 @@ func (x ApmExternalServiceEntityOutline) GetPermalink() string {
 // GetReporting returns a pointer to the value of Reporting from ApmExternalServiceEntityOutline
 func (x ApmExternalServiceEntityOutline) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ApmExternalServiceEntityOutline
+func (x ApmExternalServiceEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from ApmExternalServiceEntityOutline
@@ -2493,7 +2604,7 @@ type BrowserApplicationEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -2518,6 +2629,8 @@ type BrowserApplicationEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
@@ -2526,6 +2639,8 @@ type BrowserApplicationEntity struct {
 	Reporting bool `json:"reporting,omitempty"`
 	// The running versions of the agent in the Browser App.
 	RunningAgentVersions BrowserApplicationRunningAgentVersions `json:"runningAgentVersions,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The ID of the APM Application that serves this Browser App.
 	ServingApmApplicationID int `json:"servingApmApplicationId,omitempty"`
 	// Configuration settings for the Browser App
@@ -2586,7 +2701,7 @@ func (x BrowserApplicationEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from BrowserApplicationEntity
-func (x BrowserApplicationEntity) GetGUID() EntityGUID {
+func (x BrowserApplicationEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2640,6 +2755,11 @@ func (x BrowserApplicationEntity) GetRecentAlertViolations() []EntityAlertViolat
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from BrowserApplicationEntity
+func (x BrowserApplicationEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from BrowserApplicationEntity
 func (x BrowserApplicationEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -2653,6 +2773,11 @@ func (x BrowserApplicationEntity) GetReporting() bool {
 // GetRunningAgentVersions returns a pointer to the value of RunningAgentVersions from BrowserApplicationEntity
 func (x BrowserApplicationEntity) GetRunningAgentVersions() BrowserApplicationRunningAgentVersions {
 	return x.RunningAgentVersions
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from BrowserApplicationEntity
+func (x BrowserApplicationEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetServingApmApplicationID returns a pointer to the value of ServingApmApplicationID from BrowserApplicationEntity
@@ -2703,7 +2828,7 @@ type BrowserApplicationEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -2718,6 +2843,8 @@ type BrowserApplicationEntityOutline struct {
 	Reporting bool `json:"reporting,omitempty"`
 	// The running versions of the agent in the Browser App.
 	RunningAgentVersions BrowserApplicationRunningAgentVersions `json:"runningAgentVersions,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The ID of the APM Application that serves this Browser App.
 	ServingApmApplicationID int `json:"servingApmApplicationId,omitempty"`
 	// Configuration settings for the Browser App
@@ -2771,7 +2898,7 @@ func (x BrowserApplicationEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from BrowserApplicationEntityOutline
-func (x BrowserApplicationEntityOutline) GetGUID() EntityGUID {
+func (x BrowserApplicationEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2808,6 +2935,11 @@ func (x BrowserApplicationEntityOutline) GetReporting() bool {
 // GetRunningAgentVersions returns a pointer to the value of RunningAgentVersions from BrowserApplicationEntityOutline
 func (x BrowserApplicationEntityOutline) GetRunningAgentVersions() BrowserApplicationRunningAgentVersions {
 	return x.RunningAgentVersions
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from BrowserApplicationEntityOutline
+func (x BrowserApplicationEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetServingApmApplicationID returns a pointer to the value of ServingApmApplicationID from BrowserApplicationEntityOutline
@@ -2874,7 +3006,7 @@ type CollectionEntity struct {
 	//
 	Collection EntityCollection `json:"collection,omitempty"`
 	//
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 }
 
 // GetCollection returns a pointer to the value of Collection from CollectionEntity
@@ -2883,7 +3015,7 @@ func (x CollectionEntity) GetCollection() EntityCollection {
 }
 
 // GetGUID returns a pointer to the value of GUID from CollectionEntity
-func (x CollectionEntity) GetGUID() EntityGUID {
+func (x CollectionEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -2930,7 +3062,7 @@ type DashboardEntity struct {
 	// Dashboard creation timestamp.
 	CreatedAt nrtime.DateTime `json:"createdAt,omitempty"`
 	// The parent entity `guid` of the dashboard.
-	DashboardParentGUID EntityGUID `json:"dashboardParentGuid,omitempty"`
+	DashboardParentGUID common.EntityGUID `json:"dashboardParentGuid,omitempty"`
 	// Dashboard description.
 	Description string `json:"description,omitempty"`
 	// The entity's domain
@@ -2938,7 +3070,7 @@ type DashboardEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -2965,12 +3097,16 @@ type DashboardEntity struct {
 	Permissions DashboardPermissions `json:"permissions,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -3009,7 +3145,7 @@ func (x DashboardEntity) GetCreatedAt() nrtime.DateTime {
 }
 
 // GetDashboardParentGUID returns a pointer to the value of DashboardParentGUID from DashboardEntity
-func (x DashboardEntity) GetDashboardParentGUID() EntityGUID {
+func (x DashboardEntity) GetDashboardParentGUID() common.EntityGUID {
 	return x.DashboardParentGUID
 }
 
@@ -3029,7 +3165,7 @@ func (x DashboardEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from DashboardEntity
-func (x DashboardEntity) GetGUID() EntityGUID {
+func (x DashboardEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -3088,6 +3224,11 @@ func (x DashboardEntity) GetRecentAlertViolations() []EntityAlertViolation {
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from DashboardEntity
+func (x DashboardEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from DashboardEntity
 func (x DashboardEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -3096,6 +3237,11 @@ func (x DashboardEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from DashboardEntity
 func (x DashboardEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from DashboardEntity
+func (x DashboardEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from DashboardEntity
@@ -3133,13 +3279,13 @@ type DashboardEntityOutline struct {
 	// The date and time the dashboard was created
 	CreatedAt nrtime.DateTime `json:"createdAt,omitempty"`
 	// The parent entity `guid` of the dashboard.
-	DashboardParentGUID EntityGUID `json:"dashboardParentGuid,omitempty"`
+	DashboardParentGUID common.EntityGUID `json:"dashboardParentGuid,omitempty"`
 	// The entity's domain
 	Domain string `json:"domain,omitempty"`
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -3156,6 +3302,8 @@ type DashboardEntityOutline struct {
 	Permissions DashboardEntityPermissions `json:"permissions,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -3187,7 +3335,7 @@ func (x DashboardEntityOutline) GetCreatedAt() nrtime.DateTime {
 }
 
 // GetDashboardParentGUID returns a pointer to the value of DashboardParentGUID from DashboardEntityOutline
-func (x DashboardEntityOutline) GetDashboardParentGUID() EntityGUID {
+func (x DashboardEntityOutline) GetDashboardParentGUID() common.EntityGUID {
 	return x.DashboardParentGUID
 }
 
@@ -3202,7 +3350,7 @@ func (x DashboardEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from DashboardEntityOutline
-func (x DashboardEntityOutline) GetGUID() EntityGUID {
+func (x DashboardEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -3244,6 +3392,11 @@ func (x DashboardEntityOutline) GetPermissions() DashboardEntityPermissions {
 // GetReporting returns a pointer to the value of Reporting from DashboardEntityOutline
 func (x DashboardEntityOutline) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from DashboardEntityOutline
+func (x DashboardEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from DashboardEntityOutline
@@ -3300,7 +3453,7 @@ type DashboardPage struct {
 	// Page description.
 	Description string `json:"description,omitempty"`
 	// Unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// Page name.
 	Name string `json:"name,omitempty"`
 	// Page owner
@@ -3455,6 +3608,20 @@ type DashboardWidgetVisualization struct {
 	ID string `json:"id,omitempty"`
 }
 
+// DomainTypeInput - Input for getting details about an entity type
+type DomainTypeInput struct {
+	// The domain of the entity.
+	//
+	// The domain must be a value matching /[A-Z][A-Z0-9_]{2,14}/.
+	Domain string `json:"domain"`
+	// The type of the entity.
+	//
+	// The type must be a value matching /[A-Z][A-Z0-9_]{2,49}/.
+	//
+	// Some examples are APPLICATION, HOST or CONTAINER.
+	Type string `json:"type"`
+}
+
 // Entity - The `Entity` interface allows fetching detailed entity information for a single entity.
 //
 // To understand more about entities and entity types, look at [our docs](https://docs.newrelic.com/docs/what-are-new-relic-entities).
@@ -3472,7 +3639,7 @@ type Entity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -3493,12 +3660,16 @@ type Entity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -3542,7 +3713,7 @@ type EntityCollection struct {
 	// The definition of the collection.
 	Definition EntityCollectionDefinition `json:"definition,omitempty"`
 	// The GUID of the Entity
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The result of searching for the members of the collection.
 	Members EntitySearch `json:"members,omitempty"`
 	// The name of the collection.
@@ -3554,7 +3725,7 @@ type EntityCollection struct {
 // EntityCollectionDefinition - The definition of a collection.
 type EntityCollectionDefinition struct {
 	// A list of entity GUIDs. These entities will belong to the collection as long as their accounts are included in the scope accounts of the collection.
-	EntityGUIDs []EntityGUID `json:"entityGuids,omitempty"`
+	EntityGUIDs []common.EntityGUID `json:"entityGuids,omitempty"`
 	// The Entity Search query that returns the full collection of entities.
 	EntitySearchQuery string `json:"entitySearchQuery,omitempty"`
 	// The Accounts that will be used to scope the collection.
@@ -3574,7 +3745,7 @@ type EntityGoldenContext struct {
 	// Account context.
 	Account int `json:"account,omitempty"`
 	// Collection guid context.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 }
 
 // EntityGoldenContextInput - Input type used to define the context for the golden metrics.
@@ -3582,7 +3753,7 @@ type EntityGoldenContextInput struct {
 	// Account context.
 	Account int `json:"account,omitempty"`
 	// Collection guid context.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 }
 
 // EntityGoldenContextScopedGoldenMetrics - An object that represents the golden metrics scoped by context
@@ -3658,7 +3829,7 @@ type EntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -3671,6 +3842,8 @@ type EntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -3693,6 +3866,60 @@ type EntityRelationship struct {
 	Type EntityRelationshipType `json:"type,omitempty"`
 }
 
+// EntityRelationshipDetectedEdge - An entity relationship automatically detected by NewRelic.
+type EntityRelationshipDetectedEdge struct {
+	// The time the relationship was created.
+	CreatedAt *nrtime.EpochMilliseconds `json:"createdAt"`
+	// The source entity of the relationship.
+	Source EntityRelationshipVertex `json:"source"`
+	// The target entity of the relationship.
+	Target EntityRelationshipVertex `json:"target"`
+	// The type of the relationship.
+	Type EntityRelationshipEdgeType `json:"type"`
+}
+
+func (x *EntityRelationshipDetectedEdge) ImplementsEntityRelationshipEdge() {}
+
+// EntityRelationshipEdge - An entity relationship.
+type EntityRelationshipEdge struct {
+	// The time the relationship was created.
+	CreatedAt *nrtime.EpochMilliseconds `json:"createdAt"`
+	// The source entity of the relationship.
+	Source EntityRelationshipVertex `json:"source"`
+	// The target entity of the relationship.
+	Target EntityRelationshipVertex `json:"target"`
+	// The type of the relationship.
+	Type EntityRelationshipEdgeType `json:"type"`
+}
+
+func (x *EntityRelationshipEdge) ImplementsEntityRelationshipEdge() {}
+
+// EntityRelationshipEdgeFilter - EntityRelationship edge filter.
+type EntityRelationshipEdgeFilter struct {
+	// Filter by direction of relationship.
+	Direction EntityRelationshipEdgeDirection `json:"direction,omitempty"`
+	// Filter on entity domain-types.
+	EntityDomainTypes EntityRelationshipEntityDomainTypeFilter `json:"entityDomainTypes,omitempty"`
+	// Filter on relationship types.
+	RelationshipTypes EntityRelationshipEdgeTypeFilter `json:"relationshipTypes,omitempty"`
+}
+
+// EntityRelationshipEdgeTypeFilter - Filter on relationship types.
+type EntityRelationshipEdgeTypeFilter struct {
+	// Filter the relationships to those that are not of specific relationship types.
+	Exclude []EntityRelationshipEdgeType `json:"exclude"`
+	// Filter the relationships to those of specific relationship types.
+	Include []EntityRelationshipEdgeType `json:"include"`
+}
+
+// EntityRelationshipEntityDomainTypeFilter - Filter on entity domain-types.
+type EntityRelationshipEntityDomainTypeFilter struct {
+	// Filter the relationships to those between entities that are not of specific domain-types.
+	Exclude []DomainTypeInput `json:"exclude,omitempty"`
+	// Filter the relationships to those between entities of specific domain-types.
+	Include []DomainTypeInput `json:"include,omitempty"`
+}
+
 // EntityRelationshipFilter - Relationship filter
 type EntityRelationshipFilter struct {
 	// Filter the relationships to those that contain a specific entity type.
@@ -3710,7 +3937,7 @@ type EntityRelationshipNode struct {
 	// The `EntityType` of the relationship node.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// The Entity `guid` for the relationship node.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 }
 
 // special
@@ -3748,6 +3975,127 @@ func (x *EntityRelationshipNode) UnmarshalJSON(b []byte) error {
 			err = json.Unmarshal(*v, &x.EntityType)
 			if err != nil {
 				return err
+			}
+		case "guid":
+			err = json.Unmarshal(*v, &x.GUID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// EntityRelationshipRelatedEntitiesResult - Response containing related entities
+type EntityRelationshipRelatedEntitiesResult struct {
+	// The next cursor for fetching additional paginated results.
+	NextCursor string `json:"nextCursor,omitempty"`
+	// The list of related entities.
+	Results []EntityRelationshipEdgeInterface `json:"results"`
+}
+
+// special
+func (x *EntityRelationshipRelatedEntitiesResult) UnmarshalJSON(b []byte) error {
+	var objMap map[string]*json.RawMessage
+	err := json.Unmarshal(b, &objMap)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range objMap {
+		if v == nil {
+			continue
+		}
+
+		switch k {
+		case "nextCursor":
+			err = json.Unmarshal(*v, &x.NextCursor)
+			if err != nil {
+				return err
+			}
+		case "results":
+			if v == nil {
+				continue
+			}
+			var rawMessageResults []*json.RawMessage
+			err = json.Unmarshal(*v, &rawMessageResults)
+			if err != nil {
+				return err
+			}
+
+			for _, m := range rawMessageResults {
+				xxx, err := UnmarshalEntityRelationshipEdgeInterface(*m)
+				if err != nil {
+					return err
+				}
+
+				if xxx != nil {
+					x.Results = append(x.Results, *xxx)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// EntityRelationshipUserDefinedEdge - An entity user-defined relationship.
+type EntityRelationshipUserDefinedEdge struct {
+	// The time the relationship was created.
+	CreatedAt *nrtime.EpochMilliseconds `json:"createdAt"`
+	// The user that created the relationship.
+	CreatedByUser users.UserReference `json:"createdByUser"`
+	// The source entity of the relationship.
+	Source EntityRelationshipVertex `json:"source"`
+	// The target entity of the relationship.
+	Target EntityRelationshipVertex `json:"target"`
+	// The type of the relationship.
+	Type EntityRelationshipEdgeType `json:"type"`
+}
+
+func (x *EntityRelationshipUserDefinedEdge) ImplementsEntityRelationshipEdge() {}
+
+// EntityRelationshipVertex - A vertex in an entity relationship edge.
+type EntityRelationshipVertex struct {
+	// The account ID of the relationship node.
+	AccountID int `json:"accountId"`
+	// The entity of the relationship node.
+	Entity EntityOutlineInterface `json:"entity"`
+	// The entity guid of the relationship node.
+	GUID common.EntityGUID `json:"guid"`
+}
+
+// special
+func (x *EntityRelationshipVertex) UnmarshalJSON(b []byte) error {
+	var objMap map[string]*json.RawMessage
+	err := json.Unmarshal(b, &objMap)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range objMap {
+		if v == nil {
+			continue
+		}
+
+		switch k {
+		case "accountId":
+			err = json.Unmarshal(*v, &x.AccountID)
+			if err != nil {
+				return err
+			}
+		case "entity":
+			if v == nil {
+				continue
+			}
+			xxx, err := UnmarshalEntityOutlineInterface(*v)
+			if err != nil {
+				return err
+			}
+
+			if xxx != nil {
+				x.Entity = *xxx
 			}
 		case "guid":
 			err = json.Unmarshal(*v, &x.GUID)
@@ -3934,7 +4282,7 @@ type ExternalEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -3955,12 +4303,16 @@ type ExternalEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4002,7 +4354,7 @@ func (x ExternalEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ExternalEntity
-func (x ExternalEntity) GetGUID() EntityGUID {
+func (x ExternalEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4046,6 +4398,11 @@ func (x ExternalEntity) GetRecentAlertViolations() []EntityAlertViolation {
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from ExternalEntity
+func (x ExternalEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from ExternalEntity
 func (x ExternalEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -4054,6 +4411,11 @@ func (x ExternalEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from ExternalEntity
 func (x ExternalEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ExternalEntity
+func (x ExternalEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from ExternalEntity
@@ -4088,7 +4450,7 @@ type ExternalEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4101,6 +4463,8 @@ type ExternalEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4135,7 +4499,7 @@ func (x ExternalEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ExternalEntityOutline
-func (x ExternalEntityOutline) GetGUID() EntityGUID {
+func (x ExternalEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4169,6 +4533,11 @@ func (x ExternalEntityOutline) GetReporting() bool {
 	return x.Reporting
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ExternalEntityOutline
+func (x ExternalEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from ExternalEntityOutline
 func (x ExternalEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -4198,7 +4567,7 @@ type GenericEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4219,12 +4588,16 @@ type GenericEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4266,7 +4639,7 @@ func (x GenericEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from GenericEntity
-func (x GenericEntity) GetGUID() EntityGUID {
+func (x GenericEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4310,6 +4683,11 @@ func (x GenericEntity) GetRecentAlertViolations() []EntityAlertViolation {
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from GenericEntity
+func (x GenericEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from GenericEntity
 func (x GenericEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -4318,6 +4696,11 @@ func (x GenericEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from GenericEntity
 func (x GenericEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from GenericEntity
+func (x GenericEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from GenericEntity
@@ -4352,7 +4735,7 @@ type GenericEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4365,6 +4748,8 @@ type GenericEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4399,7 +4784,7 @@ func (x GenericEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from GenericEntityOutline
-func (x GenericEntityOutline) GetGUID() EntityGUID {
+func (x GenericEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4433,6 +4818,11 @@ func (x GenericEntityOutline) GetReporting() bool {
 	return x.Reporting
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from GenericEntityOutline
+func (x GenericEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from GenericEntityOutline
 func (x GenericEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -4462,7 +4852,7 @@ type GenericInfrastructureEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4485,12 +4875,16 @@ type GenericInfrastructureEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4532,7 +4926,7 @@ func (x GenericInfrastructureEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from GenericInfrastructureEntity
-func (x GenericInfrastructureEntity) GetGUID() EntityGUID {
+func (x GenericInfrastructureEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4581,6 +4975,11 @@ func (x GenericInfrastructureEntity) GetRecentAlertViolations() []EntityAlertVio
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from GenericInfrastructureEntity
+func (x GenericInfrastructureEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from GenericInfrastructureEntity
 func (x GenericInfrastructureEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -4589,6 +4988,11 @@ func (x GenericInfrastructureEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from GenericInfrastructureEntity
 func (x GenericInfrastructureEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from GenericInfrastructureEntity
+func (x GenericInfrastructureEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from GenericInfrastructureEntity
@@ -4625,7 +5029,7 @@ type GenericInfrastructureEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4640,6 +5044,8 @@ type GenericInfrastructureEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4674,7 +5080,7 @@ func (x GenericInfrastructureEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from GenericInfrastructureEntityOutline
-func (x GenericInfrastructureEntityOutline) GetGUID() EntityGUID {
+func (x GenericInfrastructureEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4713,6 +5119,11 @@ func (x GenericInfrastructureEntityOutline) GetReporting() bool {
 	return x.Reporting
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from GenericInfrastructureEntityOutline
+func (x GenericInfrastructureEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from GenericInfrastructureEntityOutline
 func (x GenericInfrastructureEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -4744,7 +5155,7 @@ type InfrastructureAwsLambdaFunctionEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4767,6 +5178,8 @@ type InfrastructureAwsLambdaFunctionEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
@@ -4775,6 +5188,8 @@ type InfrastructureAwsLambdaFunctionEntity struct {
 	Reporting bool `json:"reporting,omitempty"`
 	//
 	Runtime string `json:"runtime,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4816,7 +5231,7 @@ func (x InfrastructureAwsLambdaFunctionEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from InfrastructureAwsLambdaFunctionEntity
-func (x InfrastructureAwsLambdaFunctionEntity) GetGUID() EntityGUID {
+func (x InfrastructureAwsLambdaFunctionEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -4865,6 +5280,11 @@ func (x InfrastructureAwsLambdaFunctionEntity) GetRecentAlertViolations() []Enti
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from InfrastructureAwsLambdaFunctionEntity
+func (x InfrastructureAwsLambdaFunctionEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from InfrastructureAwsLambdaFunctionEntity
 func (x InfrastructureAwsLambdaFunctionEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -4878,6 +5298,11 @@ func (x InfrastructureAwsLambdaFunctionEntity) GetReporting() bool {
 // GetRuntime returns a pointer to the value of Runtime from InfrastructureAwsLambdaFunctionEntity
 func (x InfrastructureAwsLambdaFunctionEntity) GetRuntime() string {
 	return x.Runtime
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from InfrastructureAwsLambdaFunctionEntity
+func (x InfrastructureAwsLambdaFunctionEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from InfrastructureAwsLambdaFunctionEntity
@@ -4914,7 +5339,7 @@ type InfrastructureAwsLambdaFunctionEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -4931,6 +5356,8 @@ type InfrastructureAwsLambdaFunctionEntityOutline struct {
 	Reporting bool `json:"reporting,omitempty"`
 	//
 	Runtime string `json:"runtime,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -4965,7 +5392,7 @@ func (x InfrastructureAwsLambdaFunctionEntityOutline) GetEntityType() EntityType
 }
 
 // GetGUID returns a pointer to the value of GUID from InfrastructureAwsLambdaFunctionEntityOutline
-func (x InfrastructureAwsLambdaFunctionEntityOutline) GetGUID() EntityGUID {
+func (x InfrastructureAwsLambdaFunctionEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -5009,6 +5436,11 @@ func (x InfrastructureAwsLambdaFunctionEntityOutline) GetRuntime() string {
 	return x.Runtime
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from InfrastructureAwsLambdaFunctionEntityOutline
+func (x InfrastructureAwsLambdaFunctionEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from InfrastructureAwsLambdaFunctionEntityOutline
 func (x InfrastructureAwsLambdaFunctionEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -5041,7 +5473,7 @@ type InfrastructureHostEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -5064,12 +5496,16 @@ type InfrastructureHostEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -5111,7 +5547,7 @@ func (x InfrastructureHostEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from InfrastructureHostEntity
-func (x InfrastructureHostEntity) GetGUID() EntityGUID {
+func (x InfrastructureHostEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -5160,6 +5596,11 @@ func (x InfrastructureHostEntity) GetRecentAlertViolations() []EntityAlertViolat
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from InfrastructureHostEntity
+func (x InfrastructureHostEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from InfrastructureHostEntity
 func (x InfrastructureHostEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -5168,6 +5609,11 @@ func (x InfrastructureHostEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from InfrastructureHostEntity
 func (x InfrastructureHostEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from InfrastructureHostEntity
+func (x InfrastructureHostEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from InfrastructureHostEntity
@@ -5202,7 +5648,7 @@ type InfrastructureHostEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -5217,6 +5663,8 @@ type InfrastructureHostEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -5251,7 +5699,7 @@ func (x InfrastructureHostEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from InfrastructureHostEntityOutline
-func (x InfrastructureHostEntityOutline) GetGUID() EntityGUID {
+func (x InfrastructureHostEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -5288,6 +5736,11 @@ func (x InfrastructureHostEntityOutline) GetPermalink() string {
 // GetReporting returns a pointer to the value of Reporting from InfrastructureHostEntityOutline
 func (x InfrastructureHostEntityOutline) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from InfrastructureHostEntityOutline
+func (x InfrastructureHostEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from InfrastructureHostEntityOutline
@@ -5351,7 +5804,7 @@ type MetricNormalizationRule struct {
 	// Rule action.
 	Action MetricNormalizationRuleAction `json:"action,omitempty"`
 	// Application GUID
-	ApplicationGUID EntityGUID `json:"applicationGuid,omitempty"`
+	ApplicationGUID common.EntityGUID `json:"applicationGuid,omitempty"`
 	// Application Name
 	ApplicationName string `json:"applicationName,omitempty"`
 	// Date of rule creation.
@@ -5409,7 +5862,7 @@ type MobileApplicationEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -5436,12 +5889,16 @@ type MobileApplicationEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -5488,7 +5945,7 @@ func (x MobileApplicationEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from MobileApplicationEntity
-func (x MobileApplicationEntity) GetGUID() EntityGUID {
+func (x MobileApplicationEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -5547,6 +6004,11 @@ func (x MobileApplicationEntity) GetRecentAlertViolations() []EntityAlertViolati
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from MobileApplicationEntity
+func (x MobileApplicationEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from MobileApplicationEntity
 func (x MobileApplicationEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -5555,6 +6017,11 @@ func (x MobileApplicationEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from MobileApplicationEntity
 func (x MobileApplicationEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from MobileApplicationEntity
+func (x MobileApplicationEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from MobileApplicationEntity
@@ -5591,7 +6058,7 @@ type MobileApplicationEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -5606,6 +6073,8 @@ type MobileApplicationEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -5645,7 +6114,7 @@ func (x MobileApplicationEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from MobileApplicationEntityOutline
-func (x MobileApplicationEntityOutline) GetGUID() EntityGUID {
+func (x MobileApplicationEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -5684,6 +6153,11 @@ func (x MobileApplicationEntityOutline) GetReporting() bool {
 	return x.Reporting
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from MobileApplicationEntityOutline
+func (x MobileApplicationEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from MobileApplicationEntityOutline
 func (x MobileApplicationEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -5697,6 +6171,12 @@ func (x MobileApplicationEntityOutline) GetType() string {
 func (x *MobileApplicationEntityOutline) ImplementsAlertableEntityOutline() {}
 
 func (x *MobileApplicationEntityOutline) ImplementsEntityOutline() {}
+
+// NRQLQueryOptions - Additional options for NRQL queries.
+type NRQLQueryOptions struct {
+	// Limit the NRQL query to return results from the chosen [Event Namespaces](https://docs.newrelic.com/docs/accounts/new-relic-account-usage/getting-started-usage/insights-subscription-usage/#namespace).
+	EventNamespaces []string `json:"eventNamespaces"`
+}
 
 // NerdStorageCollectionMember -
 type NerdStorageCollectionMember struct {
@@ -5731,7 +6211,7 @@ type SecureCredentialEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -5752,6 +6232,8 @@ type SecureCredentialEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
@@ -5762,6 +6244,8 @@ type SecureCredentialEntity struct {
 	SecureCredentialId string `json:"secureCredentialId,omitempty"`
 	// Summary statistics for the Synthetic Monitor Secure Credential.
 	SecureCredentialSummary SecureCredentialSummaryData `json:"secureCredentialSummary,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -5810,7 +6294,7 @@ func (x SecureCredentialEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from SecureCredentialEntity
-func (x SecureCredentialEntity) GetGUID() EntityGUID {
+func (x SecureCredentialEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -5854,6 +6338,11 @@ func (x SecureCredentialEntity) GetRecentAlertViolations() []EntityAlertViolatio
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from SecureCredentialEntity
+func (x SecureCredentialEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from SecureCredentialEntity
 func (x SecureCredentialEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -5872,6 +6361,11 @@ func (x SecureCredentialEntity) GetSecureCredentialId() string {
 // GetSecureCredentialSummary returns a pointer to the value of SecureCredentialSummary from SecureCredentialEntity
 func (x SecureCredentialEntity) GetSecureCredentialSummary() SecureCredentialSummaryData {
 	return x.SecureCredentialSummary
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from SecureCredentialEntity
+func (x SecureCredentialEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from SecureCredentialEntity
@@ -5913,7 +6407,7 @@ type SecureCredentialEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -5930,6 +6424,8 @@ type SecureCredentialEntityOutline struct {
 	SecureCredentialId string `json:"secureCredentialId,omitempty"`
 	// Summary statistics for the Synthetic Monitor Secure Credential.
 	SecureCredentialSummary SecureCredentialSummaryData `json:"secureCredentialSummary,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -5971,7 +6467,7 @@ func (x SecureCredentialEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from SecureCredentialEntityOutline
-func (x SecureCredentialEntityOutline) GetGUID() EntityGUID {
+func (x SecureCredentialEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6015,6 +6511,11 @@ func (x SecureCredentialEntityOutline) GetSecureCredentialSummary() SecureCreden
 	return x.SecureCredentialSummary
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from SecureCredentialEntityOutline
+func (x SecureCredentialEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from SecureCredentialEntityOutline
 func (x SecureCredentialEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -6042,6 +6543,12 @@ type SecureCredentialSummaryData struct {
 	MonitorCount int `json:"monitorCount,omitempty"`
 }
 
+// ServiceLevelDefinition - The service level defined for a specific entity.
+type ServiceLevelDefinition struct {
+	// The SLIs attached to the entity.
+	Indicators []servicelevel.ServiceLevelIndicator `json:"indicators"`
+}
+
 // SyntheticMonitorEntity - A Synthetic Monitor entity.
 type SyntheticMonitorEntity struct {
 	//
@@ -6059,7 +6566,7 @@ type SyntheticMonitorEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -6090,12 +6597,16 @@ type SyntheticMonitorEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -6142,7 +6653,7 @@ func (x SyntheticMonitorEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from SyntheticMonitorEntity
-func (x SyntheticMonitorEntity) GetGUID() EntityGUID {
+func (x SyntheticMonitorEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6211,6 +6722,11 @@ func (x SyntheticMonitorEntity) GetRecentAlertViolations() []EntityAlertViolatio
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from SyntheticMonitorEntity
+func (x SyntheticMonitorEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from SyntheticMonitorEntity
 func (x SyntheticMonitorEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -6219,6 +6735,11 @@ func (x SyntheticMonitorEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from SyntheticMonitorEntity
 func (x SyntheticMonitorEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from SyntheticMonitorEntity
+func (x SyntheticMonitorEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from SyntheticMonitorEntity
@@ -6253,7 +6774,7 @@ type SyntheticMonitorEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -6276,6 +6797,8 @@ type SyntheticMonitorEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -6310,7 +6833,7 @@ func (x SyntheticMonitorEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from SyntheticMonitorEntityOutline
-func (x SyntheticMonitorEntityOutline) GetGUID() EntityGUID {
+func (x SyntheticMonitorEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6367,6 +6890,11 @@ func (x SyntheticMonitorEntityOutline) GetPermalink() string {
 // GetReporting returns a pointer to the value of Reporting from SyntheticMonitorEntityOutline
 func (x SyntheticMonitorEntityOutline) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from SyntheticMonitorEntityOutline
+func (x SyntheticMonitorEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from SyntheticMonitorEntityOutline
@@ -6448,7 +6976,7 @@ type ThirdPartyServiceEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -6469,12 +6997,16 @@ type ThirdPartyServiceEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -6516,7 +7048,7 @@ func (x ThirdPartyServiceEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ThirdPartyServiceEntity
-func (x ThirdPartyServiceEntity) GetGUID() EntityGUID {
+func (x ThirdPartyServiceEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6560,6 +7092,11 @@ func (x ThirdPartyServiceEntity) GetRecentAlertViolations() []EntityAlertViolati
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from ThirdPartyServiceEntity
+func (x ThirdPartyServiceEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from ThirdPartyServiceEntity
 func (x ThirdPartyServiceEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -6568,6 +7105,11 @@ func (x ThirdPartyServiceEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from ThirdPartyServiceEntity
 func (x ThirdPartyServiceEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ThirdPartyServiceEntity
+func (x ThirdPartyServiceEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from ThirdPartyServiceEntity
@@ -6602,7 +7144,7 @@ type ThirdPartyServiceEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -6615,6 +7157,8 @@ type ThirdPartyServiceEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -6649,7 +7193,7 @@ func (x ThirdPartyServiceEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from ThirdPartyServiceEntityOutline
-func (x ThirdPartyServiceEntityOutline) GetGUID() EntityGUID {
+func (x ThirdPartyServiceEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6681,6 +7225,11 @@ func (x ThirdPartyServiceEntityOutline) GetPermalink() string {
 // GetReporting returns a pointer to the value of Reporting from ThirdPartyServiceEntityOutline
 func (x ThirdPartyServiceEntityOutline) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from ThirdPartyServiceEntityOutline
+func (x ThirdPartyServiceEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from ThirdPartyServiceEntityOutline
@@ -6720,7 +7269,7 @@ type UnavailableEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -6741,12 +7290,16 @@ type UnavailableEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the entity.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -6788,7 +7341,7 @@ func (x UnavailableEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from UnavailableEntity
-func (x UnavailableEntity) GetGUID() EntityGUID {
+func (x UnavailableEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6832,6 +7385,11 @@ func (x UnavailableEntity) GetRecentAlertViolations() []EntityAlertViolation {
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from UnavailableEntity
+func (x UnavailableEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from UnavailableEntity
 func (x UnavailableEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -6840,6 +7398,11 @@ func (x UnavailableEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from UnavailableEntity
 func (x UnavailableEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from UnavailableEntity
+func (x UnavailableEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from UnavailableEntity
@@ -6874,7 +7437,7 @@ type UnavailableEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -6887,6 +7450,8 @@ type UnavailableEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -6921,7 +7486,7 @@ func (x UnavailableEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from UnavailableEntityOutline
-func (x UnavailableEntityOutline) GetGUID() EntityGUID {
+func (x UnavailableEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -6953,6 +7518,11 @@ func (x UnavailableEntityOutline) GetPermalink() string {
 // GetReporting returns a pointer to the value of Reporting from UnavailableEntityOutline
 func (x UnavailableEntityOutline) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from UnavailableEntityOutline
+func (x UnavailableEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from UnavailableEntityOutline
@@ -6990,7 +7560,7 @@ type WorkloadEntity struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -7011,12 +7581,16 @@ type WorkloadEntity struct {
 	Permalink string `json:"permalink,omitempty"`
 	// Recent violations on the members of the workload.
 	RecentAlertViolations []EntityAlertViolation `json:"recentAlertViolations,omitempty"`
+	// Related entities result with optional filtering.
+	RelatedEntities EntityRelationshipRelatedEntitiesResult `json:"relatedEntities,omitempty"`
 	// A list of the entities' relationships.
 	//
 	// For more information, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-relationships-api-tutorial).
 	Relationships []EntityRelationship `json:"relationships,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -7077,7 +7651,7 @@ func (x WorkloadEntity) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from WorkloadEntity
-func (x WorkloadEntity) GetGUID() EntityGUID {
+func (x WorkloadEntity) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -7121,6 +7695,11 @@ func (x WorkloadEntity) GetRecentAlertViolations() []EntityAlertViolation {
 	return x.RecentAlertViolations
 }
 
+// GetRelatedEntities returns a pointer to the value of RelatedEntities from WorkloadEntity
+func (x WorkloadEntity) GetRelatedEntities() EntityRelationshipRelatedEntitiesResult {
+	return x.RelatedEntities
+}
+
 // GetRelationships returns a pointer to the value of Relationships from WorkloadEntity
 func (x WorkloadEntity) GetRelationships() []EntityRelationship {
 	return x.Relationships
@@ -7129,6 +7708,11 @@ func (x WorkloadEntity) GetRelationships() []EntityRelationship {
 // GetReporting returns a pointer to the value of Reporting from WorkloadEntity
 func (x WorkloadEntity) GetReporting() bool {
 	return x.Reporting
+}
+
+// GetServiceLevel returns a pointer to the value of ServiceLevel from WorkloadEntity
+func (x WorkloadEntity) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
 }
 
 // GetTags returns a pointer to the value of Tags from WorkloadEntity
@@ -7179,7 +7763,7 @@ type WorkloadEntityOutline struct {
 	// A value representing the combination of the entity's domain and type.
 	EntityType EntityType `json:"entityType,omitempty"`
 	// A unique entity identifier.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 	// The list of golden metrics for a specific entity
 	GoldenMetrics EntityGoldenContextScopedGoldenMetrics `json:"goldenMetrics"`
 	// The list of golden tags for a specific entityType.
@@ -7192,6 +7776,8 @@ type WorkloadEntityOutline struct {
 	Permalink string `json:"permalink,omitempty"`
 	// The reporting status of the entity. If New Relic is successfully collecting data from your application, this will be true.
 	Reporting bool `json:"reporting,omitempty"`
+	// The service level defined for the entity.
+	ServiceLevel ServiceLevelDefinition `json:"serviceLevel,omitempty"`
 	// The tags applied to the entity.
 	//
 	// For details on tags, as well as query and mutation examples, visit [our docs](https://docs.newrelic.com/docs/apis/graphql-api/tutorials/graphql-tagging-api-tutorial).
@@ -7240,7 +7826,7 @@ func (x WorkloadEntityOutline) GetEntityType() EntityType {
 }
 
 // GetGUID returns a pointer to the value of GUID from WorkloadEntityOutline
-func (x WorkloadEntityOutline) GetGUID() EntityGUID {
+func (x WorkloadEntityOutline) GetGUID() common.EntityGUID {
 	return x.GUID
 }
 
@@ -7274,6 +7860,11 @@ func (x WorkloadEntityOutline) GetReporting() bool {
 	return x.Reporting
 }
 
+// GetServiceLevel returns a pointer to the value of ServiceLevel from WorkloadEntityOutline
+func (x WorkloadEntityOutline) GetServiceLevel() ServiceLevelDefinition {
+	return x.ServiceLevel
+}
+
 // GetTags returns a pointer to the value of Tags from WorkloadEntityOutline
 func (x WorkloadEntityOutline) GetTags() []EntityTag {
 	return x.Tags
@@ -7301,7 +7892,7 @@ func (x *WorkloadEntityOutline) ImplementsEntityOutline() {}
 // WorkloadEntityRef - A reference to a New Relic entity.
 type WorkloadEntityRef struct {
 	// The unique entity identifier in New Relic.
-	GUID EntityGUID `json:"guid,omitempty"`
+	GUID common.EntityGUID `json:"guid,omitempty"`
 }
 
 // WorkloadStatus - Detailed information about the status of a workload.
@@ -7333,9 +7924,6 @@ type AttributeMap map[string]interface{}
 
 // DashboardWidgetRawConfiguration - Raw JSON payload with full configuration of a widget.
 type DashboardWidgetRawConfiguration []byte
-
-// EntityGUID - An encoded Entity GUID
-type EntityGUID string
 
 // Float - The `Float` scalar type represents signed double-precision fractional
 // values as specified by
@@ -7932,10 +8520,11 @@ type EntityInterface interface {
 	ImplementsEntity()
 	GetAccountID() int
 	GetDomain() string
-	GetGUID() EntityGUID
+	GetGUID() common.EntityGUID
 	GetName() string
 	GetTags() []EntityTag
 	GetType() string
+	GetServiceLevel() ServiceLevelDefinition
 }
 
 // UnmarshalEntityInterface unmarshals the interface into the correct type
@@ -8142,7 +8731,7 @@ type EntityOutlineInterface interface {
 	ImplementsEntityOutline()
 	GetAccountID() int
 	GetDomain() string
-	GetGUID() EntityGUID
+	GetGUID() common.EntityGUID
 	GetName() string
 	GetType() string
 }
@@ -8342,6 +8931,68 @@ func UnmarshalEntityOutlineInterface(b []byte) (*EntityOutlineInterface, error) 
 	}
 
 	return nil, fmt.Errorf("interface EntityOutline was not matched against all PossibleTypes: %s", typeName)
+}
+
+// EntityRelationshipEdge - An entity relationship.
+type EntityRelationshipEdgeInterface interface {
+	ImplementsEntityRelationshipEdge()
+}
+
+// UnmarshalEntityRelationshipEdgeInterface unmarshals the interface into the correct type
+// based on __typename provided by GraphQL
+func UnmarshalEntityRelationshipEdgeInterface(b []byte) (*EntityRelationshipEdgeInterface, error) {
+	var err error
+
+	var rawMessageEntityRelationshipEdge map[string]*json.RawMessage
+	err = json.Unmarshal(b, &rawMessageEntityRelationshipEdge)
+	if err != nil {
+		return nil, err
+	}
+
+	// Nothing to unmarshal
+	if len(rawMessageEntityRelationshipEdge) < 1 {
+		return nil, nil
+	}
+
+	var typeName string
+
+	if rawTypeName, ok := rawMessageEntityRelationshipEdge["__typename"]; ok {
+		err = json.Unmarshal(*rawTypeName, &typeName)
+		if err != nil {
+			return nil, err
+		}
+
+		switch typeName {
+		case "EntityRelationshipDetectedEdge":
+			var interfaceType EntityRelationshipDetectedEdge
+			err = json.Unmarshal(b, &interfaceType)
+			if err != nil {
+				return nil, err
+			}
+
+			var xxx EntityRelationshipEdgeInterface = &interfaceType
+
+			return &xxx, nil
+		case "EntityRelationshipUserDefinedEdge":
+			var interfaceType EntityRelationshipUserDefinedEdge
+			err = json.Unmarshal(b, &interfaceType)
+			if err != nil {
+				return nil, err
+			}
+
+			var xxx EntityRelationshipEdgeInterface = &interfaceType
+
+			return &xxx, nil
+		}
+	} else {
+		keys := []string{}
+		for k := range rawMessageEntityRelationshipEdge {
+			keys = append(keys, k)
+		}
+		return nil, fmt.Errorf("interface EntityRelationshipEdge did not include a __typename field for inspection: %s", keys)
+	}
+
+	return nil, fmt.Errorf("interface EntityRelationshipEdge was not matched against all PossibleTypes: %s", typeName)
 }
 
 // InfrastructureIntegrationEntity -

@@ -167,7 +167,7 @@ func resourceNewRelicNrqlAlertCondition() *schema.Resource {
 							Required: true,
 						},
 						"since_value": {
-							Deprecated:    "use `evaluation_offset` attribute instead",
+							Deprecated:    "use `signal.aggregation_method` attribute instead",
 							Type:          schema.TypeString,
 							Optional:      true,
 							Description:   "NRQL queries are evaluated in one-minute time windows. The start time depends on the value you provide in the NRQL condition's `since_value`.",
@@ -184,8 +184,9 @@ func resourceNewRelicNrqlAlertCondition() *schema.Resource {
 								return
 							},
 						},
-						// New attribute in NerdGraph. Equivalent to `since_value`.
+						// Equivalent to `since_value`.
 						"evaluation_offset": {
+							Deprecated:    "use `signal.aggregation_method` attribute instead",
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Description:   "NRQL queries are evaluated in one-minute time windows. The start time depends on the value you provide in the NRQL condition's `evaluation_offset`.",
@@ -248,7 +249,6 @@ func resourceNewRelicNrqlAlertCondition() *schema.Resource {
 				Optional:      true,
 				Description:   "Sets a time limit, in seconds, that will automatically force-close a long-lasting violation after the time limit you select.  Must be in the range of 300 to 2592000 (inclusive)",
 				ConflictsWith: []string{"violation_time_limit"},
-				AtLeastOneOf:  []string{"violation_time_limit_seconds", "violation_time_limit"},
 				ValidateFunc:  validation.IntBetween(300, 2592000),
 			},
 			// Exists in NerdGraph, but with different values. Conversion
@@ -281,7 +281,6 @@ func resourceNewRelicNrqlAlertCondition() *schema.Resource {
 				Computed:      true,
 				Description:   "Sets a time limit, in hours, that will automatically force-close a long-lasting violation after the time limit you select. Possible values are 'ONE_HOUR', 'TWO_HOURS', 'FOUR_HOURS', 'EIGHT_HOURS', 'TWELVE_HOURS', 'TWENTY_FOUR_HOURS', 'THIRTY_DAYS' (case insensitive).",
 				ConflictsWith: []string{"violation_time_limit_seconds"},
-				AtLeastOneOf:  []string{"violation_time_limit_seconds", "violation_time_limit"},
 				ValidateFunc:  validation.StringInSlice([]string{"ONE_HOUR", "TWO_HOURS", "FOUR_HOURS", "EIGHT_HOURS", "TWELVE_HOURS", "TWENTY_FOUR_HOURS", "THIRTY_DAYS"}, true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.EqualFold(old, new) // Case fold this attribute when diffing
@@ -328,6 +327,24 @@ func resourceNewRelicNrqlAlertCondition() *schema.Resource {
 				Description:  "If using the 'static' fill option, this value will be used for filling gaps in the signal.",
 				RequiredWith: []string{"fill_option"},
 			},
+			"aggregation_method": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"CADENCE", "EVENT_FLOW", "EVENT_TIMER"}, true),
+				Description:  "The method that determines when we consider an aggregation window to be complete so that we can evaluate the signal for violations. Default is CADENCE.",
+			},
+			"aggregation_delay": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "How long we wait for data that belongs in each aggregation window. Depending on your data, a longer delay may increase accuracy but delay notifications. Use aggregationDelay with the EVENT_FLOW and CADENCE aggregation methods.",
+				RequiredWith: []string{"aggregation_method"},
+			},
+			"aggregation_timer": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "How long we wait after each data point arrives to make sure we've processed the whole batch. Use aggregationTimer with the EVENT_TIMER aggregation method.",
+				RequiredWith: []string{"aggregation_method"},
+			},
 			// Baseline ONLY
 			"baseline_direction": {
 				Type:          schema.TypeString,
@@ -357,7 +374,7 @@ func resourceNewRelicNrqlAlertConditionCreate(ctx context.Context, d *schema.Res
 	accountID := selectAccountID(providerConfig, d)
 	policyID := strconv.Itoa(d.Get("policy_id").(int))
 
-	conditionInput, err := expandNrqlAlertConditionInput(d)
+	conditionInput, err := expandNrqlAlertConditionCreateInput(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -375,8 +392,31 @@ func resourceNewRelicNrqlAlertConditionCreate(ctx context.Context, d *schema.Res
 		condition, err = client.Alerts.CreateNrqlConditionOutlierMutationWithContext(ctx, accountID, policyID, *conditionInput)
 	}
 
-	if err != nil {
-		return diag.FromErr(err)
+	var diags diag.Diagnostics
+
+	if graphQLError, ok := err.(*alerts.GraphQLErrorResponse); ok {
+		for _, e := range graphQLError.Errors {
+			var message string = e.Message
+			var errorClass string = e.Extensions.ErrorClass
+			var validationErrors = e.Extensions.ValidationErrors
+
+			if len(validationErrors) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  message + ": " + errorClass,
+				})
+			} else {
+				for _, validationError := range validationErrors {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  message + ": " + errorClass,
+						Detail:   validationError.Name + ": " + validationError.Reason,
+					})
+				}
+			}
+		}
+
+		return diags
 	}
 
 	conditionID, err := strconv.Atoi(condition.ID)
@@ -437,7 +477,7 @@ func resourceNewRelicNrqlAlertConditionUpdate(ctx context.Context, d *schema.Res
 
 	conditionID := strconv.Itoa(ids[1])
 
-	conditionInput, err := expandNrqlAlertConditionInput(d)
+	conditionInput, err := expandNrqlAlertConditionUpdateInput(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -451,8 +491,31 @@ func resourceNewRelicNrqlAlertConditionUpdate(ctx context.Context, d *schema.Res
 		_, err = client.Alerts.UpdateNrqlConditionOutlierMutationWithContext(ctx, accountID, conditionID, *conditionInput)
 	}
 
-	if err != nil {
-		return diag.FromErr(err)
+	var diags diag.Diagnostics
+
+	if graphQLError, ok := err.(*alerts.GraphQLErrorResponse); ok {
+		for _, e := range graphQLError.Errors {
+			var message string = e.Message
+			var errorClass string = e.Extensions.ErrorClass
+			var validationErrors = e.Extensions.ValidationErrors
+
+			if len(validationErrors) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  message + ": " + errorClass,
+				})
+			} else {
+				for _, validationError := range validationErrors {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  message + ": " + errorClass,
+						Detail:   validationError.Name + ": " + validationError.Reason,
+					})
+				}
+			}
+		}
+
+		return diags
 	}
 
 	return resourceNewRelicNrqlAlertConditionRead(ctx, d, meta)

@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,10 +13,10 @@ import (
 
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
 
-	"github.com/newrelic/newrelic-client-go/internal/logging"
 	"github.com/newrelic/newrelic-client-go/internal/version"
 	"github.com/newrelic/newrelic-client-go/pkg/config"
 	nrErrors "github.com/newrelic/newrelic-client-go/pkg/errors"
+	"github.com/newrelic/newrelic-client-go/pkg/logging"
 )
 
 const (
@@ -90,7 +89,7 @@ func NewClient(cfg config.Config) Client {
 	if cfg.Logger != nil {
 		logger = cfg.Logger
 	} else {
-		logger = logging.NewStructuredLogger()
+		logger = logging.NewLogrusLogger()
 	}
 
 	client := Client{
@@ -366,7 +365,7 @@ func (c *Client) Do(req *Request) (*http.Response, error) {
 	}
 
 	if errorValue.Error() != "" {
-		return nil, errors.New(errorValue.Error())
+		return nil, errorValue
 	}
 
 	if req.value == nil {

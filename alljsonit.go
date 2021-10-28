@@ -32,6 +32,7 @@ import (
 	nrqlv1alpha1 "kubeform.dev/provider-newrelic-api/apis/nrql/v1alpha1"
 	onev1alpha1 "kubeform.dev/provider-newrelic-api/apis/one/v1alpha1"
 	pluginsv1alpha1 "kubeform.dev/provider-newrelic-api/apis/plugins/v1alpha1"
+	servicev1alpha1 "kubeform.dev/provider-newrelic-api/apis/service/v1alpha1"
 	syntheticsv1alpha1 "kubeform.dev/provider-newrelic-api/apis/synthetics/v1alpha1"
 	workloadv1alpha1 "kubeform.dev/provider-newrelic-api/apis/workload/v1alpha1"
 	"kubeform.dev/provider-newrelic-controller/controllers"
@@ -179,6 +180,14 @@ var (
 		}: {
 			JsonIt:       controllers.GetJSONItr(pluginsv1alpha1.GetEncoder(), pluginsv1alpha1.GetDecoder()),
 			ResourceType: "newrelic_plugins_alert_condition",
+		},
+		{
+			Group:    "service.newrelic.kubeform.com",
+			Version:  "v1alpha1",
+			Resource: "levels",
+		}: {
+			JsonIt:       controllers.GetJSONItr(servicev1alpha1.GetEncoder(), servicev1alpha1.GetDecoder()),
+			ResourceType: "newrelic_service_level",
 		},
 		{
 			Group:    "synthetics.newrelic.kubeform.com",

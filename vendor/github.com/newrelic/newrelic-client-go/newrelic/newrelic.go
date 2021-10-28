@@ -7,7 +7,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/newrelic/newrelic-client-go/internal/logging"
 	"github.com/newrelic/newrelic-client-go/pkg/accounts"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/apiaccess"
@@ -20,6 +19,7 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/events"
 	"github.com/newrelic/newrelic-client-go/pkg/eventstometrics"
 	"github.com/newrelic/newrelic-client-go/pkg/installevents"
+	"github.com/newrelic/newrelic-client-go/pkg/logging"
 	"github.com/newrelic/newrelic-client-go/pkg/logs"
 	"github.com/newrelic/newrelic-client-go/pkg/nerdgraph"
 	"github.com/newrelic/newrelic-client-go/pkg/nerdstorage"
@@ -27,6 +27,7 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/nrqldroprules"
 	"github.com/newrelic/newrelic-client-go/pkg/plugins"
 	"github.com/newrelic/newrelic-client-go/pkg/region"
+	"github.com/newrelic/newrelic-client-go/pkg/servicelevel"
 	"github.com/newrelic/newrelic-client-go/pkg/synthetics"
 	"github.com/newrelic/newrelic-client-go/pkg/workloads"
 )
@@ -50,6 +51,7 @@ type NewRelic struct {
 	Nrdb            nrdb.Nrdb
 	Nrqldroprules   nrqldroprules.Nrqldroprules
 	Plugins         plugins.Plugins
+	ServiceLevel    servicelevel.Servicelevel
 	Synthetics      synthetics.Synthetics
 	Workloads       workloads.Workloads
 
@@ -97,6 +99,7 @@ func New(opts ...ConfigOption) (*NewRelic, error) {
 		Nrdb:            nrdb.New(cfg),
 		Nrqldroprules:   nrqldroprules.New(cfg),
 		Plugins:         plugins.New(cfg),
+		ServiceLevel:    servicelevel.New(cfg),
 		Synthetics:      synthetics.New(cfg),
 		Workloads:       workloads.New(cfg),
 	}
