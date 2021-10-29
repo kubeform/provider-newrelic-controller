@@ -1338,7 +1338,7 @@ kmodules.xyz/resource-metrics/api
 ## explicit
 kubeform.dev/apimachinery/api/v1alpha1
 kubeform.dev/apimachinery/pkg/util
-# kubeform.dev/provider-newrelic-api v0.3.1-0.20211029111032-2320fdc81ece
+# kubeform.dev/provider-newrelic-api v0.4.0
 ## explicit
 kubeform.dev/provider-newrelic-api/api/provider
 kubeform.dev/provider-newrelic-api/apis/alert
