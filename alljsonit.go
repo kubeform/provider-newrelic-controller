@@ -42,194 +42,192 @@ type Data struct {
 	ResourceType string
 }
 
-var (
-	allJsonIt = map[schema.GroupVersionResource]Data{
-		{
-			Group:    "alert.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "channels",
-		}: {
-			JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_alert_channel",
-		},
-		{
-			Group:    "alert.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "conditions",
-		}: {
-			JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_alert_condition",
-		},
-		{
-			Group:    "alert.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "mutingrules",
-		}: {
-			JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_alert_muting_rule",
-		},
-		{
-			Group:    "alert.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "policies",
-		}: {
-			JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_alert_policy",
-		},
-		{
-			Group:    "alert.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "policychannels",
-		}: {
-			JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_alert_policy_channel",
-		},
-		{
-			Group:    "apiaccess.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "keys",
-		}: {
-			JsonIt:       controllers.GetJSONItr(apiaccessv1alpha1.GetEncoder(), apiaccessv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_api_access_key",
-		},
-		{
-			Group:    "application.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "settings",
-		}: {
-			JsonIt:       controllers.GetJSONItr(applicationv1alpha1.GetEncoder(), applicationv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_application_settings",
-		},
-		{
-			Group:    "dashboard.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "dashboards",
-		}: {
-			JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_dashboard",
-		},
-		{
-			Group:    "entity.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "tags",
-		}: {
-			JsonIt:       controllers.GetJSONItr(entityv1alpha1.GetEncoder(), entityv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_entity_tags",
-		},
-		{
-			Group:    "events.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "tometricsrules",
-		}: {
-			JsonIt:       controllers.GetJSONItr(eventsv1alpha1.GetEncoder(), eventsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_events_to_metrics_rule",
-		},
-		{
-			Group:    "infra.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "alertconditions",
-		}: {
-			JsonIt:       controllers.GetJSONItr(infrav1alpha1.GetEncoder(), infrav1alpha1.GetDecoder()),
-			ResourceType: "newrelic_infra_alert_condition",
-		},
-		{
-			Group:    "insights.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "events",
-		}: {
-			JsonIt:       controllers.GetJSONItr(insightsv1alpha1.GetEncoder(), insightsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_insights_event",
-		},
-		{
-			Group:    "nrql.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "alertconditions",
-		}: {
-			JsonIt:       controllers.GetJSONItr(nrqlv1alpha1.GetEncoder(), nrqlv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_nrql_alert_condition",
-		},
-		{
-			Group:    "nrql.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "droprules",
-		}: {
-			JsonIt:       controllers.GetJSONItr(nrqlv1alpha1.GetEncoder(), nrqlv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_nrql_drop_rule",
-		},
-		{
-			Group:    "one.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "dashboards",
-		}: {
-			JsonIt:       controllers.GetJSONItr(onev1alpha1.GetEncoder(), onev1alpha1.GetDecoder()),
-			ResourceType: "newrelic_one_dashboard",
-		},
-		{
-			Group:    "one.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "dashboardraws",
-		}: {
-			JsonIt:       controllers.GetJSONItr(onev1alpha1.GetEncoder(), onev1alpha1.GetDecoder()),
-			ResourceType: "newrelic_one_dashboard_raw",
-		},
-		{
-			Group:    "plugins.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "alertconditions",
-		}: {
-			JsonIt:       controllers.GetJSONItr(pluginsv1alpha1.GetEncoder(), pluginsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_plugins_alert_condition",
-		},
-		{
-			Group:    "synthetics.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "alertconditions",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_synthetics_alert_condition",
-		},
-		{
-			Group:    "synthetics.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "monitors",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_synthetics_monitor",
-		},
-		{
-			Group:    "synthetics.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "monitorscripts",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_synthetics_monitor_script",
-		},
-		{
-			Group:    "synthetics.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "multilocationalertconditions",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_synthetics_multilocation_alert_condition",
-		},
-		{
-			Group:    "synthetics.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "securecredentials",
-		}: {
-			JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_synthetics_secure_credential",
-		},
-		{
-			Group:    "workload.newrelic.kubeform.com",
-			Version:  "v1alpha1",
-			Resource: "workloads",
-		}: {
-			JsonIt:       controllers.GetJSONItr(workloadv1alpha1.GetEncoder(), workloadv1alpha1.GetDecoder()),
-			ResourceType: "newrelic_workload",
-		},
-	}
-)
+var allJsonIt = map[schema.GroupVersionResource]Data{
+	{
+		Group:    "alert.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "channels",
+	}: {
+		JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_alert_channel",
+	},
+	{
+		Group:    "alert.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "conditions",
+	}: {
+		JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_alert_condition",
+	},
+	{
+		Group:    "alert.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "mutingrules",
+	}: {
+		JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_alert_muting_rule",
+	},
+	{
+		Group:    "alert.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "policies",
+	}: {
+		JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_alert_policy",
+	},
+	{
+		Group:    "alert.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "policychannels",
+	}: {
+		JsonIt:       controllers.GetJSONItr(alertv1alpha1.GetEncoder(), alertv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_alert_policy_channel",
+	},
+	{
+		Group:    "apiaccess.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "keys",
+	}: {
+		JsonIt:       controllers.GetJSONItr(apiaccessv1alpha1.GetEncoder(), apiaccessv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_api_access_key",
+	},
+	{
+		Group:    "application.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "settings",
+	}: {
+		JsonIt:       controllers.GetJSONItr(applicationv1alpha1.GetEncoder(), applicationv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_application_settings",
+	},
+	{
+		Group:    "dashboard.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "dashboards",
+	}: {
+		JsonIt:       controllers.GetJSONItr(dashboardv1alpha1.GetEncoder(), dashboardv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_dashboard",
+	},
+	{
+		Group:    "entity.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "tags",
+	}: {
+		JsonIt:       controllers.GetJSONItr(entityv1alpha1.GetEncoder(), entityv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_entity_tags",
+	},
+	{
+		Group:    "events.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "tometricsrules",
+	}: {
+		JsonIt:       controllers.GetJSONItr(eventsv1alpha1.GetEncoder(), eventsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_events_to_metrics_rule",
+	},
+	{
+		Group:    "infra.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "alertconditions",
+	}: {
+		JsonIt:       controllers.GetJSONItr(infrav1alpha1.GetEncoder(), infrav1alpha1.GetDecoder()),
+		ResourceType: "newrelic_infra_alert_condition",
+	},
+	{
+		Group:    "insights.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "events",
+	}: {
+		JsonIt:       controllers.GetJSONItr(insightsv1alpha1.GetEncoder(), insightsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_insights_event",
+	},
+	{
+		Group:    "nrql.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "alertconditions",
+	}: {
+		JsonIt:       controllers.GetJSONItr(nrqlv1alpha1.GetEncoder(), nrqlv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_nrql_alert_condition",
+	},
+	{
+		Group:    "nrql.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "droprules",
+	}: {
+		JsonIt:       controllers.GetJSONItr(nrqlv1alpha1.GetEncoder(), nrqlv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_nrql_drop_rule",
+	},
+	{
+		Group:    "one.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "dashboards",
+	}: {
+		JsonIt:       controllers.GetJSONItr(onev1alpha1.GetEncoder(), onev1alpha1.GetDecoder()),
+		ResourceType: "newrelic_one_dashboard",
+	},
+	{
+		Group:    "one.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "dashboardraws",
+	}: {
+		JsonIt:       controllers.GetJSONItr(onev1alpha1.GetEncoder(), onev1alpha1.GetDecoder()),
+		ResourceType: "newrelic_one_dashboard_raw",
+	},
+	{
+		Group:    "plugins.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "alertconditions",
+	}: {
+		JsonIt:       controllers.GetJSONItr(pluginsv1alpha1.GetEncoder(), pluginsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_plugins_alert_condition",
+	},
+	{
+		Group:    "synthetics.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "alertconditions",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_synthetics_alert_condition",
+	},
+	{
+		Group:    "synthetics.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "monitors",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_synthetics_monitor",
+	},
+	{
+		Group:    "synthetics.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "monitorscripts",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_synthetics_monitor_script",
+	},
+	{
+		Group:    "synthetics.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "multilocationalertconditions",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_synthetics_multilocation_alert_condition",
+	},
+	{
+		Group:    "synthetics.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "securecredentials",
+	}: {
+		JsonIt:       controllers.GetJSONItr(syntheticsv1alpha1.GetEncoder(), syntheticsv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_synthetics_secure_credential",
+	},
+	{
+		Group:    "workload.newrelic.kubeform.com",
+		Version:  "v1alpha1",
+		Resource: "workloads",
+	}: {
+		JsonIt:       controllers.GetJSONItr(workloadv1alpha1.GetEncoder(), workloadv1alpha1.GetDecoder()),
+		ResourceType: "newrelic_workload",
+	},
+}
 
 func getJsonItAndResType(gvr schema.GroupVersionResource) Data {
 	return allJsonIt[gvr]
