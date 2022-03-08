@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/newrelic/newrelic-client-go/pkg/entities"
+	"github.com/newrelic/newrelic-client-go/pkg/common"
 	"github.com/newrelic/newrelic-client-go/pkg/errors"
 )
 
@@ -160,6 +160,12 @@ func dashboardPageSchemaElem() *schema.Resource {
 				Description: "A JSON widget.",
 				Elem:        dashboardWidgetJSONSchemaElem(),
 			},
+			"widget_stacked_bar": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A stacked bar widget.",
+				Elem:        dashboardWidgetStackedBarSchemaElem(),
+			},
 		},
 	}
 }
@@ -237,6 +243,7 @@ func dashboardWidgetBarSchemaElem() *schema.Resource {
 	s := dashboardWidgetSchemaBase()
 
 	s["linked_entity_guids"] = dashboardWidgetLinkedEntityGUIDsSchema()
+	s["filter_current_dashboard"] = dashboardWidgetFilterCurrentDashboardSchema()
 
 	return &schema.Resource{
 		Schema: s,
@@ -333,10 +340,19 @@ func dashboardWidgetMarkdownSchemaElem() *schema.Resource {
 	}
 }
 
+func dashboardWidgetStackedBarSchemaElem() *schema.Resource {
+	s := dashboardWidgetSchemaBase()
+
+	return &schema.Resource{
+		Schema: s,
+	}
+}
+
 func dashboardWidgetPieSchemaElem() *schema.Resource {
 	s := dashboardWidgetSchemaBase()
 
 	s["linked_entity_guids"] = dashboardWidgetLinkedEntityGUIDsSchema()
+	s["filter_current_dashboard"] = dashboardWidgetFilterCurrentDashboardSchema()
 
 	return &schema.Resource{
 		Schema: s,
@@ -347,6 +363,7 @@ func dashboardWidgetTableSchemaElem() *schema.Resource {
 	s := dashboardWidgetSchemaBase()
 
 	s["linked_entity_guids"] = dashboardWidgetLinkedEntityGUIDsSchema()
+	s["filter_current_dashboard"] = dashboardWidgetFilterCurrentDashboardSchema()
 
 	return &schema.Resource{
 		Schema: s,
@@ -360,7 +377,16 @@ func dashboardWidgetLinkedEntityGUIDsSchema() *schema.Schema {
 			Type: schema.TypeString,
 		},
 		Optional:    true,
+		Computed:    true,
 		Description: "Related entities. Currently only supports Dashboard entities, but may allow other cases in the future.",
+	}
+}
+
+func dashboardWidgetFilterCurrentDashboardSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Use this item to filter the current dashboard",
 	}
 }
 
@@ -382,6 +408,11 @@ func resourceNewRelicOneDashboardCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
+	filterWidgets, err := findDashboardWidgetFilterCurrentDashboard(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	log.Printf("[INFO] Creating New Relic One dashboard: %s", dashboard.Name)
 
 	created, err := client.Dashboards.DashboardCreateWithContext(ctx, accountID, *dashboard)
@@ -398,9 +429,38 @@ func resourceNewRelicOneDashboardCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("err: newrelic_one_dashboard Create failed: %s", errMessages)
 	}
 
+	log.Printf("[INFO] New Dashboard GUID: %s", guid)
+
 	d.SetId(string(guid))
 
-	return resourceNewRelicOneDashboardRead(ctx, d, meta)
+	res := resourceNewRelicOneDashboardRead(ctx, d, meta)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[INFO] Number of widgets with filter_current_dashboard: %d", len(filterWidgets))
+	if len(filterWidgets) > 0 {
+
+		err = setDashboardWidgetFilterCurrentDashboardLinkedEntity(d, filterWidgets)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		dashboard, err := expandDashboardInput(d, defaultInfo)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		result, err := client.Dashboards.DashboardUpdateWithContext(ctx, *dashboard, guid)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		return diag.FromErr(flattenDashboardUpdateResult(result, d))
+
+	}
+
+	return res
 }
 
 // resourceNewRelicOneDashboardRead NerdGraph => Terraform reader
@@ -415,7 +475,7 @@ func resourceNewRelicOneDashboardRead(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Reading New Relic One dashboard %s", d.Id())
 
-	dashboard, err := client.Dashboards.GetDashboardEntityWithContext(ctx, entities.EntityGUID(d.Id()))
+	dashboard, err := client.Dashboards.GetDashboardEntityWithContext(ctx, common.EntityGUID(d.Id()))
 	if err != nil {
 		if _, ok := err.(*errors.NotFound); ok {
 			d.SetId("")
@@ -448,14 +508,24 @@ func resourceNewRelicOneDashboardUpdate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[INFO] Updating New Relic One dashboard '%s' (%s)", dashboard.Name, d.Id())
 
-	result, err := client.Dashboards.DashboardUpdateWithContext(ctx, *dashboard, entities.EntityGUID(d.Id()))
+	updated, err := client.Dashboards.DashboardUpdateWithContext(ctx, *dashboard, common.EntityGUID(d.Id()))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	guid := updated.EntityResult.GUID
+	if guid == "" {
+		var errMessages string
+		for _, e := range updated.Errors {
+			errMessages += "[" + string(e.Type) + ": " + e.Description + "]"
+		}
+
+		return diag.Errorf("err: newrelic_one_dashboard Update failed: %s", errMessages)
+	}
+
 	// We have to use the Update Result, not a re-read of the entity as the changes take
 	// some amount of time to be re-indexed
-	return diag.FromErr(flattenDashboardUpdateResult(result, d))
+	return diag.FromErr(flattenDashboardUpdateResult(updated, d))
 }
 
 func resourceNewRelicOneDashboardDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -463,7 +533,7 @@ func resourceNewRelicOneDashboardDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[INFO] Deleting New Relic One dashboard %v", d.Id())
 
-	if _, err := client.Dashboards.DashboardDeleteWithContext(ctx, entities.EntityGUID(d.Id())); err != nil {
+	if _, err := client.Dashboards.DashboardDeleteWithContext(ctx, common.EntityGUID(d.Id())); err != nil {
 		if _, ok := err.(*errors.NotFound); ok {
 			return nil
 		}

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/newrelic/newrelic-client-go/pkg/entities"
+	"github.com/newrelic/newrelic-client-go/pkg/common"
 	"github.com/newrelic/newrelic-client-go/pkg/errors"
 )
 
@@ -119,6 +119,17 @@ func dashboardRawWidgetSchemaElem() *schema.Resource {
 		DiffSuppressFunc: structure.SuppressJsonDiff,
 	}
 
+	// Expose linked_entity_guids
+	s["linked_entity_guids"] = &schema.Schema{
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+		Optional:         true,
+		Description:      "(Optional) Related entity GUIDs. Currently only supports Dashboard entity GUIDs.",
+		DiffSuppressFunc: structure.SuppressJsonDiff,
+	}
+
 	return &schema.Resource{
 		Schema: s,
 	}
@@ -210,7 +221,7 @@ func resourceNewRelicOneDashboardRawRead(ctx context.Context, d *schema.Resource
 
 	log.Printf("[INFO] Reading New Relic One dashboard %s", d.Id())
 
-	dashboard, err := client.Dashboards.GetDashboardEntityWithContext(ctx, entities.EntityGUID(d.Id()))
+	dashboard, err := client.Dashboards.GetDashboardEntityWithContext(ctx, common.EntityGUID(d.Id()))
 	if err != nil {
 		if _, ok := err.(*errors.NotFound); ok {
 			d.SetId("")
@@ -243,7 +254,7 @@ func resourceNewRelicOneDashboardRawUpdate(ctx context.Context, d *schema.Resour
 
 	log.Printf("[INFO] Updating New Relic One dashboard '%s' (%s)", dashboard.Name, d.Id())
 
-	result, err := client.Dashboards.DashboardUpdateWithContext(ctx, *dashboard, entities.EntityGUID(d.Id()))
+	result, err := client.Dashboards.DashboardUpdateWithContext(ctx, *dashboard, common.EntityGUID(d.Id()))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -258,7 +269,7 @@ func resourceNewRelicOneDashboardRawDelete(ctx context.Context, d *schema.Resour
 
 	log.Printf("[INFO] Deleting New Relic One dashboard %v", d.Id())
 
-	if _, err := client.Dashboards.DashboardDeleteWithContext(ctx, entities.EntityGUID(d.Id())); err != nil {
+	if _, err := client.Dashboards.DashboardDeleteWithContext(ctx, common.EntityGUID(d.Id())); err != nil {
 		if _, ok := err.(*errors.NotFound); ok {
 			return nil
 		}

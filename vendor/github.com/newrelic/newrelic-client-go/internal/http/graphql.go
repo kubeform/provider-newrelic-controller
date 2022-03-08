@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -22,20 +21,8 @@ type GraphQLError struct {
 	Extensions struct {
 		ErrorClass string `json:"errorClass,omitempty"`
 		ErrorCode  string `json:"error_code,omitempty"`
+		Code       string `json:"code,omitempty"`
 	} `json:"extensions,omitempty"`
-	DownstreamResponse []GraphQLDownstreamResponse `json:"downstreamResponse,omitempty"`
-}
-
-// GraphQLDownstreamResponse represents an error's downstream response.
-type GraphQLDownstreamResponse struct {
-	Extensions struct {
-		Code             string `json:"code,omitempty"`
-		ValidationErrors []struct {
-			Name   string `json:"name,omitempty"`
-			Reason string `json:"reason,omitempty"`
-		} `json:"validationErrors,omitempty"`
-	} `json:"extensions,omitempty"`
-	Message string `json:"message,omitempty"`
 }
 
 // GraphQLErrorResponse represents a default error response body.
@@ -47,14 +34,8 @@ func (r *GraphQLErrorResponse) Error() string {
 	if len(r.Errors) > 0 {
 		messages := []string{}
 		for _, e := range r.Errors {
-
 			if e.Message != "" {
 				messages = append(messages, e.Message)
-			}
-
-			if e.DownstreamResponse != nil {
-				f, _ := json.Marshal(e.DownstreamResponse)
-				messages = append(messages, string(f))
 			}
 		}
 		return strings.Join(messages, ", ")
@@ -80,13 +61,6 @@ func (r *GraphQLErrorResponse) IsRetryableError() bool {
 		if errorClass == "TIMEOUT" || errorClass == "INTERNAL_SERVER_ERROR" || errorClass == "SERVER_ERROR" {
 			return true
 		}
-
-		for _, downstreamErr := range err.DownstreamResponse {
-			code := downstreamErr.Extensions.Code
-			if code == "INTERNAL_SERVER_ERROR" || code == "SERVER_ERROR" {
-				return true
-			}
-		}
 	}
 
 	return false
@@ -106,6 +80,21 @@ func (r *GraphQLErrorResponse) IsUnauthorized(resp *http.Response) bool {
 	// Handle invalid or missing API key
 	for _, err := range r.Errors {
 		if err.Extensions.ErrorCode == "BAD_API_KEY" {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsDeprecated parses error messages for warnings that a field being used
+// is deprecated.  We want to bubble that up, but not stop returning data
+//
+// Example deprecation message:
+//   This field is deprecated! Please use `relatedEntities` instead.
+func (r *GraphQLErrorResponse) IsDeprecated() bool {
+	for _, err := range r.Errors {
+		if strings.HasPrefix(err.Message, "This field is deprecated!") {
 			return true
 		}
 	}
