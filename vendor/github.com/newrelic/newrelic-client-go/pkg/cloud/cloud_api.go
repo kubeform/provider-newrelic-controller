@@ -363,12 +363,6 @@ const CloudConfigureIntegrationMutation = `mutation(
 			metricsPollingInterval
 			resourceGroups
 		}
-		... on CloudAzureServicefabricIntegration {
-			__typename
-			inventoryPollingInterval
-			metricsPollingInterval
-			resourceGroups
-		}
 		... on CloudAzureSqlIntegration {
 			__typename
 			inventoryPollingInterval
@@ -1120,12 +1114,6 @@ const CloudDisableIntegrationMutation = `mutation(
 			metricsPollingInterval
 			resourceGroups
 		}
-		... on CloudAzureServicefabricIntegration {
-			__typename
-			inventoryPollingInterval
-			metricsPollingInterval
-			resourceGroups
-		}
 		... on CloudAzureSqlIntegration {
 			__typename
 			inventoryPollingInterval
@@ -1716,7 +1704,7 @@ type CloudUnlinkAccountQueryResponse struct {
 
 const CloudUnlinkAccountMutation = `mutation(
 	$accountId: Int!,
-	$accounts: [CloudUnlinkAccountsInput],
+	$accounts: [CloudUnlinkAccountsInput!]!,
 ) { cloudUnlinkAccount(
 	accountId: $accountId,
 	accounts: $accounts,
@@ -1741,41 +1729,42 @@ const CloudUnlinkAccountMutation = `mutation(
 	}
 } }`
 
-// Get all linked cloud provider accounts scoped to the Actor.
-func (a *Cloud) GetLinkedAccounts(
-	provider string,
-) (*[]CloudLinkedAccount, error) {
-	return a.GetLinkedAccountsWithContext(context.Background(),
-		provider,
+// Get one linked provider account.
+func (a *Cloud) GetLinkedAccount(
+	accountID int,
+	iD int,
+) (*CloudLinkedAccount, error) {
+	return a.GetLinkedAccountWithContext(context.Background(),
+		accountID,
+		iD,
 	)
 }
 
-// Get all linked cloud provider accounts scoped to the Actor.
-func (a *Cloud) GetLinkedAccountsWithContext(
+// Get one linked provider account.
+func (a *Cloud) GetLinkedAccountWithContext(
 	ctx context.Context,
-	provider string,
-) (*[]CloudLinkedAccount, error) {
+	accountID int,
+	iD int,
+) (*CloudLinkedAccount, error) {
 
-	resp := linkedAccountsResponse{}
+	resp := linkedAccountResponse{}
 	vars := map[string]interface{}{
-		"provider": provider,
+		"accountID": accountID,
+		"id":        iD,
 	}
 
-	if err := a.client.NerdGraphQueryWithContext(ctx, getLinkedAccountsQuery, vars, &resp); err != nil {
+	if err := a.client.NerdGraphQueryWithContext(ctx, getLinkedAccountQuery, vars, &resp); err != nil {
 		return nil, err
 	}
 
-	if len(resp.Actor.Cloud.LinkedAccounts) == 0 {
-		return nil, errors.NewNotFound("")
-	}
-
-	return &resp.Actor.Cloud.LinkedAccounts, nil
+	return &resp.Actor.Account.Cloud.LinkedAccount, nil
 }
 
-const getLinkedAccountsQuery = `query(
-	$provider: String,
-) { actor { cloud { linkedAccounts(
-	provider: $provider,
+const getLinkedAccountQuery = `query(
+	$accountID: Int!,
+	$id: Int!,
+) { actor { account(id: $accountID) { cloud { linkedAccount(
+	id: $id,
 ) {
 	authLabel
 	createdAt
@@ -2098,12 +2087,6 @@ const getLinkedAccountsQuery = `query(
 			resourceGroups
 		}
 		... on CloudAzureServicebusIntegration {
-			__typename
-			inventoryPollingInterval
-			metricsPollingInterval
-			resourceGroups
-		}
-		... on CloudAzureServicefabricIntegration {
 			__typename
 			inventoryPollingInterval
 			metricsPollingInterval
@@ -2509,6 +2492,87 @@ const getLinkedAccountsQuery = `query(
 			tagValue
 		}
 	}
+	metricCollectionMode
+	name
+	nrAccountId
+	provider {
+		__typename
+		createdAt
+		icon
+		id
+		name
+		services {
+			createdAt
+			icon
+			id
+			isEnabled
+			name
+			slug
+			updatedAt
+		}
+		slug
+		updatedAt
+		... on CloudAwsGovCloudProvider {
+			__typename
+			awsAccountId
+		}
+		... on CloudAwsProvider {
+			__typename
+			roleAccountId
+			roleExternalId
+		}
+		... on CloudBaseProvider {
+			__typename
+		}
+		... on CloudGcpProvider {
+			__typename
+			serviceAccountId
+		}
+	}
+	updatedAt
+} } } } }`
+
+// Get all linked cloud provider accounts scoped to the Actor.
+func (a *Cloud) GetLinkedAccounts(
+	provider string,
+) (*[]CloudLinkedAccount, error) {
+	return a.GetLinkedAccountsWithContext(context.Background(),
+		provider,
+	)
+}
+
+// Get all linked cloud provider accounts scoped to the Actor.
+func (a *Cloud) GetLinkedAccountsWithContext(
+	ctx context.Context,
+	provider string,
+) (*[]CloudLinkedAccount, error) {
+
+	resp := linkedAccountsResponse{}
+	vars := map[string]interface{}{
+		"provider": provider,
+	}
+
+	if err := a.client.NerdGraphQueryWithContext(ctx, getLinkedAccountsQuery, vars, &resp); err != nil {
+		return nil, err
+	}
+
+	if len(resp.Actor.Cloud.LinkedAccounts) == 0 {
+		return nil, errors.NewNotFound("")
+	}
+
+	return &resp.Actor.Cloud.LinkedAccounts, nil
+}
+
+const getLinkedAccountsQuery = `query(
+	$provider: String,
+) { actor { cloud { linkedAccounts(
+	provider: $provider,
+) {
+	authLabel
+	createdAt
+	disabled
+	externalId
+	id
 	metricCollectionMode
 	name
 	nrAccountId

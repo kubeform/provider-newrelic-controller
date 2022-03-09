@@ -207,7 +207,7 @@ func (a *Alerts) CreateMutingRuleWithContext(ctx context.Context, accountID int,
 
 	resp := alertMutingRuleCreateResponse{}
 
-	if err := a.client.NerdGraphQueryWithContext(ctx, alertsMutingRulesCreate, vars, &resp); err != nil {
+	if err := a.NerdGraphQueryWithContext(ctx, alertsMutingRulesCreate, vars, &resp); err != nil {
 		return nil, err
 	}
 
@@ -229,7 +229,7 @@ func (a *Alerts) UpdateMutingRuleWithContext(ctx context.Context, accountID int,
 
 	resp := alertMutingRuleUpdateResponse{}
 
-	if err := a.client.NerdGraphQueryWithContext(ctx, alertsMutingRulesUpdate, vars, &resp); err != nil {
+	if err := a.NerdGraphQueryWithContext(ctx, alertsMutingRulesUpdate, vars, &resp); err != nil {
 		return nil, err
 	}
 
@@ -250,11 +250,7 @@ func (a *Alerts) DeleteMutingRuleWithContext(ctx context.Context, accountID int,
 
 	resp := alertMutingRuleDeleteResponse{}
 
-	if err := a.client.NerdGraphQueryWithContext(ctx, alertsMutingRuleDelete, vars, &resp); err != nil {
-		return err
-	}
-
-	return nil
+	return a.NerdGraphQueryWithContext(ctx, alertsMutingRuleDelete, vars, &resp)
 }
 
 type alertMutingRuleCreateResponse struct {

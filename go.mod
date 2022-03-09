@@ -9,11 +9,11 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-uuid v1.0.1
 	github.com/hashicorp/hcl v1.0.0
-	github.com/hashicorp/terraform-plugin-go v0.3.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
+	github.com/hashicorp/terraform-plugin-go v0.4.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.9.0
 	github.com/imdario/mergo v0.3.12
 	github.com/json-iterator/go v1.1.11
-	github.com/newrelic/terraform-provider-newrelic/v2 v2.24.1
+	github.com/newrelic/terraform-provider-newrelic/v2 v2.39.1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.3
 	go.bytebuilders.dev/audit v0.0.11
@@ -28,7 +28,7 @@ require (
 	k8s.io/klog/v2 v2.8.0
 	kmodules.xyz/client-go v0.0.0-20211028120227-48eb36f92a30
 	kubeform.dev/apimachinery v0.0.0-20210824104859-ba5604d5a1cc
-	kubeform.dev/provider-newrelic-api v0.4.1-0.20220215060006-b03466bc8baf
+	kubeform.dev/provider-newrelic-api v0.4.1-0.20220309111517-b429b4620eb3
 	kubeform.dev/terraform-backend-sdk v0.0.0-20210922115523-21574335f0db
 	sigs.k8s.io/cli-utils v0.25.0
 	sigs.k8s.io/controller-runtime v0.9.0

@@ -12,13 +12,15 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/errors"
 )
 
 func validateMutingRuleConditionAttribute(val interface{}, key string) (warns []string, errs []error) {
 	valueString := val.(string)
-	attemptedTagRegex := regexp.MustCompile(`^tag`)
-	correctTagRegex := regexp.MustCompile(`^tag\..+$`)
+	attemptedTagRegex := regexp.MustCompile(`^tags?`)
+	correctTagRegex := regexp.MustCompile(`^tags?\..+$`)
+	guidTagRegex := regexp.MustCompile(`^tags?\.guid$`)
 
 	// tag.SomeValue attempted but does not match allowed format
 	if attemptedTagRegex.Match([]byte(valueString)) {
@@ -26,9 +28,14 @@ func validateMutingRuleConditionAttribute(val interface{}, key string) (warns []
 			errs = append(errs, fmt.Errorf("%#v of %#v must be in the format tag.tag_name", key, valueString))
 			return
 		}
+		// tag.guid is going away in the future. entity.guid should be used instead
+		if guidTagRegex.Match([]byte(valueString)) {
+			warns = append(warns, fmt.Sprintf("%#v has been deprecated for Muting Rules. Please use \"entity.guid\" instead for Muting Rules configurations ", valueString))
+			return
+		}
 		return
 	}
-	v := validation.StringInSlice([]string{"accountId", "conditionId", "policyId", "policyName", "conditionName", "conditionType", "conditionRunbookUrl", "product", "targetId", "targetName", "nrqlEventType", "tag", "nrqlQuery"}, false)
+	v := validation.StringInSlice([]string{"accountId", "conditionId", "entity.guid", "policyId", "policyName", "conditionName", "conditionType", "conditionRunbookUrl", "product", "targetId", "targetName", "nrqlEventType", "tags", "nrqlQuery"}, false)
 	return v(valueString, key)
 }
 func validateNaiveDateTime(val interface{}, key string) (warns []string, errs []error) {
@@ -131,9 +138,10 @@ func resourceNewRelicAlertMutingRule() *schema.Resource {
 										Description:  "The attribute on a violation.",
 									},
 									"operator": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The operator used to compare the attribute's value with the supplied value(s).",
+										Type:         schema.TypeString,
+										Required:     true,
+										Description:  "The operator used to compare the attribute's value with the supplied value(s).",
+										ValidateFunc: validation.StringInSlice([]string{"ANY", "CONTAINS", "ENDS_WITH", "EQUALS", "IN", "IS_BLANK", "IS_NOT_BLANK", "NOT_CONTAINS", "NOT_ENDS_WITH", "NOT_EQUALS", "NOT_IN", "NOT_STARTS_WITH", "STARTS_WITH"}, true),
 									},
 									"values": {
 										Type:        schema.TypeList,
@@ -194,8 +202,32 @@ func resourceNewRelicAlertMutingRuleCreate(ctx context.Context, d *schema.Resour
 	log.Printf("[INFO] Creating New Relic alert muting rule.")
 
 	created, err := client.Alerts.CreateMutingRuleWithContext(ctx, accountID, createInput)
-	if err != nil {
-		return diag.FromErr(err)
+
+	var diags diag.Diagnostics
+
+	if graphQLError, ok := err.(*alerts.GraphQLErrorResponse); ok {
+		for _, e := range graphQLError.Errors {
+			var message string = e.Message
+			var errorClass string = e.Extensions.ErrorClass
+			var validationErrors = e.Extensions.ValidationErrors
+
+			if len(validationErrors) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  message + ": " + errorClass,
+				})
+			} else {
+				for _, validationError := range validationErrors {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  message + ": " + errorClass,
+						Detail:   validationError.Name + ": " + validationError.Reason,
+					})
+				}
+			}
+		}
+
+		return diags
 	}
 
 	d.SetId(serializeIDs([]int{accountID, created.ID}))
@@ -249,8 +281,32 @@ func resourceNewRelicAlertMutingRuleUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	_, err = client.Alerts.UpdateMutingRuleWithContext(ctx, accountID, mutingRuleID, updateInput)
-	if err != nil {
-		return diag.FromErr(err)
+
+	var diags diag.Diagnostics
+
+	if graphQLError, ok := err.(*alerts.GraphQLErrorResponse); ok {
+		for _, e := range graphQLError.Errors {
+			var message string = e.Message
+			var errorClass string = e.Extensions.ErrorClass
+			var validationErrors = e.Extensions.ValidationErrors
+
+			if len(validationErrors) == 0 {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  message + ": " + errorClass,
+				})
+			} else {
+				for _, validationError := range validationErrors {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Error,
+						Summary:  message + ": " + errorClass,
+						Detail:   validationError.Name + ": " + validationError.Reason,
+					})
+				}
+			}
+		}
+
+		return diags
 	}
 
 	return resourceNewRelicAlertMutingRuleRead(ctx, d, meta)
