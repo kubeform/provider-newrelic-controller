@@ -304,26 +304,26 @@ github.com/hashicorp/hcl/v2/json
 github.com/hashicorp/logutils
 # github.com/hashicorp/serf v0.9.5
 github.com/hashicorp/serf/coordinate
-# github.com/hashicorp/terraform-exec v0.14.0
+# github.com/hashicorp/terraform-exec v0.15.0
 github.com/hashicorp/terraform-exec/internal/version
 github.com/hashicorp/terraform-exec/tfexec
 github.com/hashicorp/terraform-exec/tfinstall
-# github.com/hashicorp/terraform-json v0.12.0
+# github.com/hashicorp/terraform-json v0.13.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-go v0.3.0
+# github.com/hashicorp/terraform-plugin-go v0.4.0
 ## explicit
 github.com/hashicorp/terraform-plugin-go/tfprotov5
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/fromproto
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/toproto
-github.com/hashicorp/terraform-plugin-go/tfprotov5/server
+github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server
 github.com/hashicorp/terraform-plugin-go/tfprotov6
 github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/fromproto
 github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6
 github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/toproto
-github.com/hashicorp/terraform-plugin-go/tfprotov6/server
+github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server
 github.com/hashicorp/terraform-plugin-go/tftypes
-# github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
+# github.com/hashicorp/terraform-plugin-sdk/v2 v2.9.0
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
@@ -408,7 +408,7 @@ github.com/mitchellh/go-homedir
 github.com/mitchellh/go-testing-interface
 # github.com/mitchellh/go-wordwrap v1.0.0
 github.com/mitchellh/go-wordwrap
-# github.com/mitchellh/mapstructure v1.4.1
+# github.com/mitchellh/mapstructure v1.4.2
 github.com/mitchellh/mapstructure
 # github.com/mitchellh/panicwrap v1.0.0
 github.com/mitchellh/panicwrap
@@ -430,18 +430,20 @@ github.com/nats-io/nkeys
 github.com/nats-io/nuid
 # github.com/newrelic/go-insights v1.0.3
 github.com/newrelic/go-insights/client
-# github.com/newrelic/newrelic-client-go v0.61.1
+# github.com/newrelic/newrelic-client-go v0.74.1
 github.com/newrelic/newrelic-client-go/internal/http
-github.com/newrelic/newrelic-client-go/internal/logging
 github.com/newrelic/newrelic-client-go/internal/serialization
 github.com/newrelic/newrelic-client-go/internal/version
 github.com/newrelic/newrelic-client-go/newrelic
 github.com/newrelic/newrelic-client-go/pkg/accounts
+github.com/newrelic/newrelic-client-go/pkg/ai
 github.com/newrelic/newrelic-client-go/pkg/alerts
 github.com/newrelic/newrelic-client-go/pkg/apiaccess
 github.com/newrelic/newrelic-client-go/pkg/apm
 github.com/newrelic/newrelic-client-go/pkg/cloud
+github.com/newrelic/newrelic-client-go/pkg/common
 github.com/newrelic/newrelic-client-go/pkg/config
+github.com/newrelic/newrelic-client-go/pkg/contextkeys
 github.com/newrelic/newrelic-client-go/pkg/dashboards
 github.com/newrelic/newrelic-client-go/pkg/edge
 github.com/newrelic/newrelic-client-go/pkg/entities
@@ -450,6 +452,7 @@ github.com/newrelic/newrelic-client-go/pkg/events
 github.com/newrelic/newrelic-client-go/pkg/eventstometrics
 github.com/newrelic/newrelic-client-go/pkg/infrastructure
 github.com/newrelic/newrelic-client-go/pkg/installevents
+github.com/newrelic/newrelic-client-go/pkg/logging
 github.com/newrelic/newrelic-client-go/pkg/logs
 github.com/newrelic/newrelic-client-go/pkg/nerdgraph
 github.com/newrelic/newrelic-client-go/pkg/nerdstorage
@@ -458,11 +461,12 @@ github.com/newrelic/newrelic-client-go/pkg/nrqldroprules
 github.com/newrelic/newrelic-client-go/pkg/nrtime
 github.com/newrelic/newrelic-client-go/pkg/plugins
 github.com/newrelic/newrelic-client-go/pkg/region
+github.com/newrelic/newrelic-client-go/pkg/servicelevel
 github.com/newrelic/newrelic-client-go/pkg/synthetics
 github.com/newrelic/newrelic-client-go/pkg/testhelpers
 github.com/newrelic/newrelic-client-go/pkg/users
 github.com/newrelic/newrelic-client-go/pkg/workloads
-# github.com/newrelic/terraform-provider-newrelic/v2 v2.24.1
+# github.com/newrelic/terraform-provider-newrelic/v2 v2.39.1
 ## explicit
 github.com/newrelic/terraform-provider-newrelic/v2/newrelic
 # github.com/oklog/run v1.0.0
@@ -1338,7 +1342,7 @@ kmodules.xyz/resource-metrics/api
 ## explicit
 kubeform.dev/apimachinery/api/v1alpha1
 kubeform.dev/apimachinery/pkg/util
-# kubeform.dev/provider-newrelic-api v0.4.1-0.20220215060006-b03466bc8baf
+# kubeform.dev/provider-newrelic-api v0.4.1-0.20220309111517-b429b4620eb3
 ## explicit
 kubeform.dev/provider-newrelic-api/api/provider
 kubeform.dev/provider-newrelic-api/apis/alert
@@ -1363,6 +1367,8 @@ kubeform.dev/provider-newrelic-api/apis/one
 kubeform.dev/provider-newrelic-api/apis/one/v1alpha1
 kubeform.dev/provider-newrelic-api/apis/plugins
 kubeform.dev/provider-newrelic-api/apis/plugins/v1alpha1
+kubeform.dev/provider-newrelic-api/apis/service
+kubeform.dev/provider-newrelic-api/apis/service/v1alpha1
 kubeform.dev/provider-newrelic-api/apis/synthetics
 kubeform.dev/provider-newrelic-api/apis/synthetics/v1alpha1
 kubeform.dev/provider-newrelic-api/apis/workload

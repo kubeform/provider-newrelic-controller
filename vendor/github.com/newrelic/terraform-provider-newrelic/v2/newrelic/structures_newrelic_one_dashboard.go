@@ -3,10 +3,12 @@ package newrelic
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/newrelic/newrelic-client-go/pkg/common"
 	"github.com/newrelic/newrelic-client-go/pkg/dashboards"
 	"github.com/newrelic/newrelic-client-go/pkg/entities"
 	"github.com/newrelic/newrelic-client-go/pkg/nrdb"
@@ -21,7 +23,7 @@ func expandDashboardInput(d *schema.ResourceData, meta interface{}) (*dashboards
 		Name: d.Get("name").(string),
 	}
 
-	dash.Pages, err = expandDashboardPageInput(d.Get("page").([]interface{}), meta)
+	dash.Pages, err = expandDashboardPageInput(d, d.Get("page").([]interface{}), meta)
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +42,14 @@ func expandDashboardInput(d *schema.ResourceData, meta interface{}) (*dashboards
 
 // TODO: Reduce the cyclomatic complexity of this func
 // nolint:gocyclo
-func expandDashboardPageInput(pages []interface{}, meta interface{}) ([]dashboards.DashboardPageInput, error) {
+func expandDashboardPageInput(d *schema.ResourceData, pages []interface{}, meta interface{}) ([]dashboards.DashboardPageInput, error) {
 	if len(pages) < 1 {
 		return []dashboards.DashboardPageInput{}, nil
 	}
 
 	expanded := make([]dashboards.DashboardPageInput, len(pages))
 
-	for i, v := range pages {
+	for pageIndex, v := range pages {
 		var page dashboards.DashboardPageInput
 		p := v.(map[string]interface{})
 
@@ -63,7 +65,7 @@ func expandDashboardPageInput(pages []interface{}, meta interface{}) ([]dashboar
 
 		// GUID exists for Update, null for new page
 		if guid, ok := p["guid"]; ok {
-			page.GUID = entities.EntityGUID(guid.(string))
+			page.GUID = common.EntityGUID(guid.(string))
 		}
 
 		// For each of the widget type, we need to expand them as well
@@ -100,14 +102,14 @@ func expandDashboardPageInput(pages []interface{}, meta interface{}) ([]dashboar
 			}
 		}
 		if widgets, ok := p["widget_billboard"]; ok {
-			for _, v := range widgets.([]interface{}) {
+			for widgetIndex, v := range widgets.([]interface{}) {
 				// Get generic properties set
 				widget, err := expandDashboardWidgetInput(v.(map[string]interface{}), meta)
 				if err != nil {
 					return nil, err
 				}
 
-				widget.Configuration.Billboard, err = expandDashboardBillboardWidgetConfigurationInput(v.(map[string]interface{}), meta)
+				widget.Configuration.Billboard, err = expandDashboardBillboardWidgetConfigurationInput(d, v.(map[string]interface{}), meta, pageIndex, widgetIndex)
 				if err != nil {
 					return nil, err
 				}
@@ -259,8 +261,24 @@ func expandDashboardPageInput(pages []interface{}, meta interface{}) ([]dashboar
 				page.Widgets = append(page.Widgets, widget)
 			}
 		}
+		if widgets, ok := p["widget_stacked_bar"]; ok {
+			for _, v := range widgets.([]interface{}) {
+				// Get generic properties set
+				widget, err := expandDashboardWidgetInput(v.(map[string]interface{}), meta)
+				if err != nil {
+					return nil, err
+				}
+				widget.RawConfiguration, err = expandDashboardStackedBarWidgetRawConfigurationInput(v.(map[string]interface{}), meta)
+				if err != nil {
+					return nil, err
+				}
+				widget.Visualization.ID = "viz.stacked-bar"
 
-		expanded[i] = page
+				page.Widgets = append(page.Widgets, widget)
+			}
+		}
+
+		expanded[pageIndex] = page
 	}
 
 	return expanded, nil
@@ -295,7 +313,7 @@ func expandDashboardBarWidgetConfigurationInput(i map[string]interface{}, meta i
 	return nil, nil
 }
 
-func expandDashboardBillboardWidgetConfigurationInput(i map[string]interface{}, meta interface{}) (*dashboards.DashboardBillboardWidgetConfigurationInput, error) {
+func expandDashboardBillboardWidgetConfigurationInput(d *schema.ResourceData, i map[string]interface{}, meta interface{}, pageIndex int, widgetIndex int) (*dashboards.DashboardBillboardWidgetConfigurationInput, error) {
 	var cfg dashboards.DashboardBillboardWidgetConfigurationInput
 	var err error
 
@@ -308,17 +326,33 @@ func expandDashboardBillboardWidgetConfigurationInput(i map[string]interface{}, 
 
 	// optional, order is important (API returns them sorted alpha)
 	cfg.Thresholds = []dashboards.DashboardBillboardWidgetThresholdInput{}
-	if t, ok := i["critical"]; ok {
+	if _, ok := d.GetOk(fmt.Sprintf("page.%d.widget_billboard.%d.critical", pageIndex, widgetIndex)); ok {
+		if t, ok := i["critical"]; ok {
+			value := t.(float64)
+			cfg.Thresholds = append(cfg.Thresholds, dashboards.DashboardBillboardWidgetThresholdInput{
+				AlertSeverity: entities.DashboardAlertSeverityTypes.CRITICAL,
+				Value:         &value,
+			})
+		}
+	} else {
 		cfg.Thresholds = append(cfg.Thresholds, dashboards.DashboardBillboardWidgetThresholdInput{
 			AlertSeverity: entities.DashboardAlertSeverityTypes.CRITICAL,
-			Value:         t.(float64),
+			Value:         nil,
 		})
 	}
 
-	if t, ok := i["warning"]; ok {
+	if _, ok := d.GetOk(fmt.Sprintf("page.%d.widget_billboard.%d.warning", pageIndex, widgetIndex)); ok {
+		if t, ok := i["warning"]; ok {
+			value := t.(float64)
+			cfg.Thresholds = append(cfg.Thresholds, dashboards.DashboardBillboardWidgetThresholdInput{
+				AlertSeverity: entities.DashboardAlertSeverityTypes.WARNING,
+				Value:         &value,
+			})
+		}
+	} else {
 		cfg.Thresholds = append(cfg.Thresholds, dashboards.DashboardBillboardWidgetThresholdInput{
 			AlertSeverity: entities.DashboardAlertSeverityTypes.WARNING,
-			Value:         t.(float64),
+			Value:         nil,
 		})
 	}
 
@@ -438,6 +472,24 @@ func expandDashboardMarkdownWidgetConfigurationInput(i map[string]interface{}, m
 	}
 	return nil, nil
 }
+
+func expandDashboardStackedBarWidgetRawConfigurationInput(i map[string]interface{}, meta interface{}) ([]byte, error) {
+	var err error
+	cfg := struct {
+		NRQLQueries []dashboards.DashboardWidgetNRQLQueryInput `json:"nrqlQueries"`
+	}{}
+
+	// just has queries
+	if q, ok := i["nrql_query"]; ok {
+		cfg.NRQLQueries, err = expandDashboardWidgetNRQLQueryInput(q.([]interface{}), meta)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return json.Marshal(cfg)
+}
+
 func expandDashboardPieWidgetConfigurationInput(i map[string]interface{}, meta interface{}) (*dashboards.DashboardPieWidgetConfigurationInput, error) {
 	var cfg dashboards.DashboardPieWidgetConfigurationInput
 	var err error
@@ -498,11 +550,11 @@ func expandDashboardWidgetInput(w map[string]interface{}, meta interface{}) (das
 	return widget, nil
 }
 
-func expandLinkedEntityGUIDs(guids []interface{}) []entities.EntityGUID {
-	out := make([]entities.EntityGUID, len(guids))
+func expandLinkedEntityGUIDs(guids []interface{}) []common.EntityGUID {
+	out := make([]common.EntityGUID, len(guids))
 
 	for i := range out {
-		out[i] = entities.EntityGUID(guids[i].(string))
+		out[i] = common.EntityGUID(guids[i].(string))
 	}
 
 	return out
@@ -609,7 +661,7 @@ func flattenDashboardPage(in *[]entities.DashboardPage) []interface{} {
 		}
 
 		for _, widget := range p.Widgets {
-			widgetType, w := flattenDashboardWidget(&widget)
+			widgetType, w := flattenDashboardWidget(&widget, string(p.GUID))
 
 			if widgetType != "" {
 				if _, ok := m[widgetType]; !ok {
@@ -637,7 +689,7 @@ func flattenLinkedEntityGUIDs(linkedEntities []entities.EntityOutlineInterface) 
 }
 
 // nolint:gocyclo
-func flattenDashboardWidget(in *entities.DashboardWidget) (string, map[string]interface{}) {
+func flattenDashboardWidget(in *entities.DashboardWidget, pageGUID string) (string, map[string]interface{}) {
 	var widgetType string
 	out := make(map[string]interface{})
 
@@ -656,6 +708,12 @@ func flattenDashboardWidget(in *entities.DashboardWidget) (string, map[string]in
 		out["linked_entity_guids"] = flattenLinkedEntityGUIDs(in.LinkedEntities)
 	}
 
+	var filterCurrentDashboard = false
+
+	if out["linked_entity_guids"] != nil && len(out["linked_entity_guids"].([]string)) == 1 && stringInSlice(out["linked_entity_guids"].([]string), pageGUID) {
+		filterCurrentDashboard = true
+	}
+
 	switch in.Visualization.ID {
 	case "viz.area":
 		widgetType = "widget_area"
@@ -667,6 +725,7 @@ func flattenDashboardWidget(in *entities.DashboardWidget) (string, map[string]in
 		if len(in.Configuration.Bar.NRQLQueries) > 0 {
 			out["nrql_query"] = flattenDashboardWidgetNRQLQuery(&in.Configuration.Bar.NRQLQueries)
 		}
+		out["filter_current_dashboard"] = filterCurrentDashboard
 	case "viz.billboard":
 		widgetType = "widget_billboard"
 		if len(in.Configuration.Billboard.NRQLQueries) > 0 {
@@ -744,16 +803,28 @@ func flattenDashboardWidget(in *entities.DashboardWidget) (string, map[string]in
 		if in.Configuration.Markdown.Text != "" {
 			out["text"] = in.Configuration.Markdown.Text
 		}
+	case "viz.stacked-bar":
+		widgetType = "widget_stacked_bar"
+		if len(in.RawConfiguration) > 0 {
+			cfg := struct {
+				NRQLQueries []entities.DashboardWidgetNRQLQuery `json:"nrqlQueries"`
+			}{}
+			if err := json.Unmarshal(in.RawConfiguration, &cfg); err == nil {
+				out["nrql_query"] = flattenDashboardWidgetNRQLQuery(&cfg.NRQLQueries)
+			}
+		}
 	case "viz.pie":
 		widgetType = "widget_pie"
 		if len(in.Configuration.Pie.NRQLQueries) > 0 {
 			out["nrql_query"] = flattenDashboardWidgetNRQLQuery(&in.Configuration.Pie.NRQLQueries)
 		}
+		out["filter_current_dashboard"] = filterCurrentDashboard
 	case "viz.table":
 		widgetType = "widget_table"
 		if len(in.Configuration.Table.NRQLQueries) > 0 {
 			out["nrql_query"] = flattenDashboardWidgetNRQLQuery(&in.Configuration.Table.NRQLQueries)
 		}
+		out["filter_current_dashboard"] = filterCurrentDashboard
 	}
 
 	return widgetType, out
@@ -772,4 +843,86 @@ func flattenDashboardWidgetNRQLQuery(in *[]entities.DashboardWidgetNRQLQuery) []
 	}
 
 	return out
+}
+
+// Function to find all of the widgets that have filter_current_dashboard set and return the title and layout location to identify later.
+func findDashboardWidgetFilterCurrentDashboard(d *schema.ResourceData) ([]interface{}, error) {
+	var widgetList []interface{}
+
+	pages := d.Get("page").([]interface{})
+	selfLinkingWidgets := []string{"widget_bar", "widget_pie", "widget_table"}
+
+	for i, v := range pages {
+		p := v.(map[string]interface{})
+		// For each of the widget type, we need to expand them as well
+		for _, widgetType := range selfLinkingWidgets {
+			if widgets, ok := p[widgetType]; ok {
+				for _, widget := range widgets.([]interface{}) {
+					w := widget.(map[string]interface{})
+					if v, ok := w["filter_current_dashboard"]; ok && v.(bool) {
+
+						if l, ok := w["linked_entity_guids"]; ok && len(l.([]interface{})) > 0 {
+							return nil, fmt.Errorf("err: filter_current_dashboard can't be set if linked_entity_guids is configured")
+						}
+
+						unqWidget := make(map[string]interface{})
+						if t, ok := w["title"]; ok {
+							unqWidget["title"] = t.(string)
+						}
+						if r, ok := w["row"]; ok {
+							unqWidget["row"] = r.(int)
+						}
+						if c, ok := w["column"]; ok {
+							unqWidget["column"] = c.(int)
+						}
+
+						unqWidget["page"] = i
+
+						widgetList = append(widgetList, unqWidget)
+					}
+				}
+			}
+		}
+
+	}
+
+	return widgetList, nil
+
+}
+
+// Function to set the page guid as the linked entity now that the page is created
+func setDashboardWidgetFilterCurrentDashboardLinkedEntity(d *schema.ResourceData, filterWidgets []interface{}) error {
+
+	if len(filterWidgets) < 1 {
+		log.Printf("[INFO] Empty list of widgets to filter")
+		return nil
+	}
+
+	selfLinkingWidgets := []string{"widget_bar", "widget_pie", "widget_table"}
+
+	pages := d.Get("page").([]interface{})
+	for i, v := range pages {
+		p := v.(map[string]interface{})
+		for _, widgetType := range selfLinkingWidgets {
+			if widgets, ok := p[widgetType]; ok {
+				for _, k := range widgets.([]interface{}) {
+					w := k.(map[string]interface{})
+					for _, f := range filterWidgets {
+						e := f.(map[string]interface{})
+						if e["page"] == i {
+							if w["title"] == e["title"] && w["column"] == e["column"] && w["row"] == e["row"] {
+								w["linked_entity_guids"] = []string{p["guid"].(string)}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if err := d.Set("page", pages); err != nil {
+		return err
+	}
+
+	return nil
 }

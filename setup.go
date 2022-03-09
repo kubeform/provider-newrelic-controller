@@ -50,6 +50,7 @@ import (
 	nrqlv1alpha1 "kubeform.dev/provider-newrelic-api/apis/nrql/v1alpha1"
 	onev1alpha1 "kubeform.dev/provider-newrelic-api/apis/one/v1alpha1"
 	pluginsv1alpha1 "kubeform.dev/provider-newrelic-api/apis/plugins/v1alpha1"
+	servicev1alpha1 "kubeform.dev/provider-newrelic-api/apis/service/v1alpha1"
 	syntheticsv1alpha1 "kubeform.dev/provider-newrelic-api/apis/synthetics/v1alpha1"
 	workloadv1alpha1 "kubeform.dev/provider-newrelic-api/apis/workload/v1alpha1"
 	controllersalert "kubeform.dev/provider-newrelic-controller/controllers/alert"
@@ -63,6 +64,7 @@ import (
 	controllersnrql "kubeform.dev/provider-newrelic-controller/controllers/nrql"
 	controllersone "kubeform.dev/provider-newrelic-controller/controllers/one"
 	controllersplugins "kubeform.dev/provider-newrelic-controller/controllers/plugins"
+	controllersservice "kubeform.dev/provider-newrelic-controller/controllers/service"
 	controllerssynthetics "kubeform.dev/provider-newrelic-controller/controllers/synthetics"
 	controllersworkload "kubeform.dev/provider-newrelic-controller/controllers/workload"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -541,6 +543,23 @@ func SetupManager(ctx context.Context, mgr manager.Manager, gvk schema.GroupVers
 			return err
 		}
 	case schema.GroupVersionKind{
+		Group:   "service.newrelic.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Level",
+	}:
+		if err := (&controllersservice.LevelReconciler{
+			Client:   mgr.GetClient(),
+			Log:      ctrl.Log.WithName("controllers").WithName("Level"),
+			Scheme:   mgr.GetScheme(),
+			Gvk:      gvk,
+			Provider: _provider,
+			Resource: _provider.ResourcesMap["newrelic_service_level"],
+			TypeName: "newrelic_service_level",
+		}).SetupWithManager(ctx, mgr, auditor, restrictToNamespace); err != nil {
+			setupLog.Error(err, "unable to create controller", "controller", "Level")
+			return err
+		}
+	case schema.GroupVersionKind{
 		Group:   "synthetics.newrelic.kubeform.com",
 		Version: "v1alpha1",
 		Kind:    "AlertCondition",
@@ -803,6 +822,15 @@ func SetupWebhook(mgr manager.Manager, gvk schema.GroupVersionKind) error {
 	}:
 		if err := (&pluginsv1alpha1.AlertCondition{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "AlertCondition")
+			return err
+		}
+	case schema.GroupVersionKind{
+		Group:   "service.newrelic.kubeform.com",
+		Version: "v1alpha1",
+		Kind:    "Level",
+	}:
+		if err := (&servicev1alpha1.Level{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Level")
 			return err
 		}
 	case schema.GroupVersionKind{
